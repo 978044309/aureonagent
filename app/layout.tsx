@@ -6,17 +6,17 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://978044309.github.io/aureonagent/"),
-  title: "Aureon Insurance & Wealth AI",
-  description: "AI 驱动的保险与财富管理经纪平台，分析家庭风险、保险缺口、资产配置和现金流压力。",
-  keywords: ["AI 保险", "财富管理", "保险经纪", "家庭风险分析", "资产配置", "Aureon"],
+  title: "Aureon 保单医生 - AI 保单体检",
+  description: "上传保单，使用 AI 整理保障责任、识别保额不足、保障缺失和潜在重复，生成家庭风险体检报告。",
+  keywords: ["AI 保单体检", "保单分析", "家庭保障", "保险经纪人工具", "保障缺口", "Aureon 保单医生"],
   alternates: {
     canonical: "https://978044309.github.io/aureonagent/"
   },
   openGraph: {
-    title: "Aureon Insurance & Wealth AI",
-    description: "分析家庭风险、保险缺口、资产配置和现金流压力。",
+    title: "Aureon 保单医生 - AI 保单体检",
+    description: "看懂保障责任，识别保障缺口，生成家庭风险体检报告。",
     url: "https://978044309.github.io/aureonagent/",
-    siteName: "Aureon",
+    siteName: "Aureon 保单医生",
     locale: "zh_CN",
     type: "website"
   },

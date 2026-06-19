@@ -1,6 +1,6 @@
-# Aureon Insurance & Wealth AI
+# Aureon 保单医生
 
-AI-powered insurance and wealth broker MVP built with Next.js, React, TypeScript, and Tailwind CSS.
+An AI policy checkup MVP for consumers and insurance brokers, built with Next.js, React, TypeScript, and Tailwind CSS.
 
 ## Run locally
 
@@ -13,8 +13,8 @@ The MVP stores intake data, reports, and advisor leads in `localStorage`. The de
 
 ## Included
 
-- Product landing page
-- Five-step family and financial intake
-- Rule-generated risk and wealth report
-- Advisor matching and lead capture
-- Advisor dashboard with filtering and status management
+- Policy upload and structured family responsibility intake
+- Rule-generated insurance gap and family risk report
+- Clear educational-analysis and no-product-recommendation boundaries
+- Broker interview recruitment and 99/199 RMB pricing validation
+- Human review request and broker lead workspace
