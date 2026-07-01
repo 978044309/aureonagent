@@ -33,6 +33,98 @@ function hydrateSeed(): AppData {
   return { tasks: [seedTask], talents: seedTalents, matches: createMatches(seedTask, seedTalents), applications: [], orders: [] };
 }
 
+function buildDemoData(): AppData {
+  const createdAt = new Date().toISOString();
+  const tasks: EnterpriseTask[] = [
+    {
+      id: "demo-task-brand",
+      companyName: "Aureon Labs",
+      companyContact: "ops@aureonlabs.example",
+      title: "为 AI 工具设计品牌视觉和落地页",
+      description: "完成品牌基础视觉、首屏结构、落地页文案和可交互页面原型，用于产品发布前测试。",
+      budget: 18000,
+      deadline: "2026-07-28",
+      skills: ["产品", "设计", "前端", "文案"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("为 AI 工具设计品牌视觉和落地页", "完成品牌基础视觉、首屏结构、落地页文案和可交互页面原型，用于产品发布前测试。", 18000, ["产品", "设计", "前端", "文案"])
+    },
+    {
+      id: "demo-task-data",
+      companyName: "Bright Retail",
+      companyContact: "pm@brightretail.example",
+      title: "搭建销售数据分析仪表盘",
+      description: "整理销售数据，定义核心指标，制作可视化仪表盘并输出经营洞察。",
+      budget: 15000,
+      deadline: "2026-07-24",
+      skills: ["数据分析", "后端", "产品"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("搭建销售数据分析仪表盘", "整理销售数据，定义核心指标，制作可视化仪表盘并输出经营洞察。", 15000, ["数据分析", "后端", "产品"])
+    },
+    {
+      id: "demo-task-content",
+      companyName: "Northstar Education",
+      companyContact: "growth@northstar.example",
+      title: "制作 30 天短视频内容计划",
+      description: "围绕在线课程设计短视频选题、脚本框架、发布节奏和复盘指标。",
+      budget: 8000,
+      deadline: "2026-07-20",
+      skills: ["运营", "文案", "AI"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("制作 30 天短视频内容计划", "围绕在线课程设计短视频选题、脚本框架、发布节奏和复盘指标。", 8000, ["运营", "文案", "AI"])
+    },
+    {
+      id: "demo-task-automation",
+      companyName: "Atlas Ops",
+      companyContact: "founder@atlasops.example",
+      title: "搭建内部 AI 自动化工作流",
+      description: "把客服 FAQ、线索分拣和周报整理做成自动化流程，并交付使用说明。",
+      budget: 22000,
+      deadline: "2026-08-03",
+      skills: ["AI", "后端", "产品"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("搭建内部 AI 自动化工作流", "把客服 FAQ、线索分拣和周报整理做成自动化流程，并交付使用说明。", 22000, ["AI", "后端", "产品"])
+    },
+    {
+      id: "demo-task-finance",
+      companyName: "Harbor Studio",
+      companyContact: "finance@harborstudio.example",
+      title: "整理外包项目财务台账",
+      description: "规范应收应付、项目成本和月度利润表，形成可持续维护的财务模板。",
+      budget: 6000,
+      deadline: "2026-07-18",
+      skills: ["财务", "数据分析", "运营"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("整理外包项目财务台账", "规范应收应付、项目成本和月度利润表，形成可持续维护的财务模板。", 6000, ["财务", "数据分析", "运营"])
+    }
+  ];
+
+  const talents: TalentProfile[] = [
+    { id: "demo-talent-product", name: "周启明", contact: "zhou@example.com", skills: ["产品", "AI", "前端"], availability: "每周 20 小时", expectedIncome: 12000, experience: "做过 AI SaaS MVP、需求拆解和前端交付。", createdAt },
+    { id: "demo-talent-design", name: "苏曼", contact: "suman@example.com", skills: ["设计", "文案", "产品"], availability: "每周 15 小时", expectedIncome: 10000, experience: "擅长品牌视觉、落地页和转化文案。", createdAt },
+    { id: "demo-talent-data", name: "王可", contact: "wangke@example.com", skills: ["数据分析", "后端", "AI"], availability: "每周 18 小时", expectedIncome: 13000, experience: "做过销售数据看板、BI 报告和数据清洗。", createdAt },
+    { id: "demo-talent-ops", name: "李安然", contact: "li@example.com", skills: ["运营", "文案", "AI"], availability: "每周 12 小时", expectedIncome: 7000, experience: "负责过教育产品内容矩阵、短视频脚本和增长复盘。", createdAt },
+    { id: "demo-talent-auto", name: "赵一帆", contact: "zhao@example.com", skills: ["AI", "后端", "产品"], availability: "每周 25 小时", expectedIncome: 16000, experience: "搭建过客服机器人、内部自动化流程和权限接口。", createdAt },
+    { id: "demo-talent-finance", name: "黄佳", contact: "huangjia@example.com", skills: ["财务", "数据分析", "运营"], availability: "每周 10 小时", expectedIncome: 5000, experience: "有外包项目财务、应收应付和利润表经验。", createdAt }
+  ];
+
+  const matches = tasks.flatMap((task) => createMatches(task, talents));
+  const applications: TaskApplication[] = [
+    { id: "demo-task-content-demo-talent-ops-application", taskId: "demo-task-content", talentId: "demo-talent-ops", status: "order_created", createdAt },
+    { id: "demo-task-finance-demo-talent-finance-application", taskId: "demo-task-finance", talentId: "demo-talent-finance", status: "order_created", createdAt }
+  ];
+  const orders: PlatformOrder[] = [
+    { id: "demo-task-content-demo-talent-ops-talent_application", taskId: "demo-task-content", talentId: "demo-talent-ops", source: "talent_application", amount: 8000, commissionRate: 10, commissionAmount: 800, talentPayout: 7200, status: "pending_payment", createdAt },
+    { id: "demo-task-automation-demo-talent-auto-enterprise_invite", taskId: "demo-task-automation", talentId: "demo-talent-auto", source: "enterprise_invite", amount: 22000, commissionRate: 10, commissionAmount: 2200, talentPayout: 19800, status: "escrowed", createdAt }
+  ];
+
+  return { tasks, talents, matches, applications, orders };
+}
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -78,6 +170,11 @@ export default function Home() {
       .then(setIsAdmin)
       .catch((error) => setNotice(`管理员权限检查失败：${error.message}`));
   }, [session]);
+
+  useEffect(() => {
+    if (!session || !isAdmin || data.tasks.some((task) => task.id === "demo-task-brand")) return;
+    void seedDemoData();
+  }, [session, isAdmin]);
 
   const selectedTask = data.tasks.find((task) => task.id === selectedTaskId) ?? data.tasks[0];
   const selectedMatches = data.matches.filter((match) => match.taskId === selectedTask?.id);
@@ -169,6 +266,34 @@ export default function Home() {
       orders: kind === "order" ? current.orders.filter((item) => item.id !== id) : current.orders.filter((item) => kind === "task" ? item.taskId !== id : kind === "talent" ? item.talentId !== id : true)
     }));
     setNotice("已删除。");
+  }
+
+  async function seedDemoData() {
+    if (!isAdmin) return setNotice("当前账号没有管理员权限。");
+    const demo = buildDemoData();
+    const merged: AppData = {
+      tasks: [...demo.tasks, ...data.tasks.filter((item) => !demo.tasks.some((demoItem) => demoItem.id === item.id))],
+      talents: [...demo.talents, ...data.talents.filter((item) => !demo.talents.some((demoItem) => demoItem.id === item.id))],
+      matches: [...demo.matches, ...data.matches.filter((item) => !demo.matches.some((demoItem) => demoItem.id === item.id))],
+      applications: [...demo.applications, ...data.applications.filter((item) => !demo.applications.some((demoItem) => demoItem.id === item.id))],
+      orders: [...demo.orders, ...data.orders.filter((item) => !demo.orders.some((demoItem) => demoItem.id === item.id))]
+    };
+    setData(merged);
+    setSelectedTaskId(demo.tasks[0]?.id ?? selectedTaskId);
+    if (session) {
+      try {
+        await Promise.all(demo.tasks.map((task) => saveCloudTask(task)));
+        await Promise.all(demo.talents.map((talent) => saveCloudTalent(talent)));
+        await saveCloudMatches(demo.matches);
+        await Promise.all(demo.applications.map((application) => saveCloudApplication(application)));
+        await Promise.all(demo.orders.map((order) => saveCloudOrder(order)));
+        setNotice("已生成演示企业任务、个人用户、匹配记录和平台订单。");
+      } catch (error) {
+        setNotice(`演示数据保存失败：${error instanceof Error ? error.message : "未知错误"}`);
+      }
+    } else {
+      setNotice("已在本地生成演示数据。登录后可同步到云端。");
+    }
   }
 
   return (
