@@ -1,25 +1,27 @@
-import { EnterpriseTask, MatchResult, TalentProfile, TaskApplication } from "./types";
+﻿import { EnterpriseTask, MatchResult, TalentProfile, TaskApplication, PlatformOrder } from "./types";
 import { supabase } from "./supabaseClient";
 
 export async function loadCloudData() {
   if (!supabase) return null;
 
-  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }, { data: applications, error: applicationsError }] = await Promise.all([
+  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }, { data: applications, error: applicationsError }, { data: orders, error: ordersError }] = await Promise.all([
     supabase.from("enterprise_tasks").select("*, ai_task_breakdowns(*)").order("created_at", { ascending: false }),
     supabase.from("talent_profiles").select("*").order("created_at", { ascending: false }),
     supabase.from("task_matches").select("*").order("score", { ascending: false }),
     supabase.from("task_applications").select("*").order("created_at", { ascending: false }),
+    supabase.from("platform_orders").select("*").order("created_at", { ascending: false }),
   ]);
 
-  if (tasksError || talentsError || matchesError || applicationsError) {
-    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || applicationsError?.message || "Unable to load cloud data");
+  if (tasksError || talentsError || matchesError || applicationsError || ordersError) {
+    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || applicationsError?.message || ordersError?.message || "Unable to load cloud data");
   }
 
   return {
     tasks: (tasks ?? []).map(mapTask),
     talents: (talents ?? []).map(mapTalent),
     matches: (matches ?? []).map(mapMatch),
-    applications: (applications ?? []).map(mapApplication)
+    applications: (applications ?? []).map(mapApplication),
+    orders: (orders ?? []).map(mapOrder)
   };
 }
 
@@ -107,6 +109,29 @@ export async function saveCloudApplication(application: TaskApplication) {
   if (error) throw new Error(error.message);
 }
 
+export async function saveCloudOrder(order: PlatformOrder) {
+  if (!supabase) return;
+  const { error } = await supabase.from("platform_orders").upsert({
+    id: order.id,
+    task_id: order.taskId,
+    talent_id: order.talentId,
+    source: order.source,
+    amount: order.amount,
+    commission_rate: order.commissionRate,
+    commission_amount: order.commissionAmount,
+    talent_payout: order.talentPayout,
+    status: order.status,
+    created_at: order.createdAt
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function updateCloudOrderStatus(orderId: string, status: PlatformOrder["status"]) {
+  if (!supabase) return;
+  const { error } = await supabase.from("platform_orders").update({ status }).eq("id", orderId);
+  if (error) throw new Error(error.message);
+}
+
 function mapTask(row: any): EnterpriseTask {
   const breakdown = Array.isArray(row.ai_task_breakdowns) ? row.ai_task_breakdowns[0] : row.ai_task_breakdowns;
   return {
@@ -139,7 +164,6 @@ function mapTask(row: any): EnterpriseTask {
     }
   };
 }
-
 function mapTalent(row: any): TalentProfile {
   return {
     id: row.id,
@@ -175,3 +199,19 @@ function mapApplication(row: any): TaskApplication {
     createdAt: row.created_at
   };
 }
+
+function mapOrder(row: any): PlatformOrder {
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    talentId: row.talent_id,
+    source: row.source,
+    amount: row.amount,
+    commissionRate: row.commission_rate,
+    commissionAmount: row.commission_amount,
+    talentPayout: row.talent_payout,
+    status: row.status,
+    createdAt: row.created_at
+  };
+}
+

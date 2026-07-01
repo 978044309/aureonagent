@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { ArrowRight, BriefcaseBusiness, CalendarClock, CheckCircle2, LayoutDashboard, ListFilter, Menu, Search, Sparkles, UserRound, UsersRound, X } from "lucide-react";
-import { loadCloudData, saveCloudApplication, saveCloudMatches, saveCloudTalent, saveCloudTask, updateCloudMatchStatus } from "@/lib/cloudStore";
+import { loadCloudData, saveCloudApplication, saveCloudMatches, saveCloudOrder, saveCloudTalent, saveCloudTask, updateCloudMatchStatus, updateCloudOrderStatus } from "@/lib/cloudStore";
 import { createMatches, generateTaskBreakdown, normalizeSkills } from "@/lib/mockAi";
 import { isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
-import { AppData, EnterpriseTask, MatchResult, TalentProfile, TaskApplication } from "@/lib/types";
+import { AppData, EnterpriseTask, MatchResult, PlatformOrder, TalentProfile, TaskApplication } from "@/lib/types";
 
 type View = "home" | "auth" | "post" | "profile" | "market" | "matches" | "admin";
 
@@ -30,7 +30,7 @@ const seedTalents: TalentProfile[] = [
 ];
 
 function hydrateSeed(): AppData {
-  return { tasks: [seedTask], talents: seedTalents, matches: createMatches(seedTask, seedTalents), applications: [] };
+  return { tasks: [seedTask], talents: seedTalents, matches: createMatches(seedTask, seedTalents), applications: [], orders: [] };
 }
 
 export default function Home() {
@@ -45,7 +45,7 @@ export default function Home() {
     const saved = localStorage.getItem("ai-workforce-data");
     if (saved) {
       const parsed = JSON.parse(saved);
-      setData({ ...hydrateSeed(), ...parsed, applications: parsed.applications ?? [] });
+      setData({ ...hydrateSeed(), ...parsed, applications: parsed.applications ?? [], orders: parsed.orders ?? [] });
     }
   }, []);
 
@@ -64,7 +64,7 @@ export default function Home() {
     if (!session) return;
     loadCloudData()
       .then((cloudData) => {
-        if (cloudData && (cloudData.tasks.length || cloudData.talents.length || cloudData.matches.length || cloudData.applications.length)) {
+        if (cloudData && (cloudData.tasks.length || cloudData.talents.length || cloudData.matches.length || cloudData.applications.length || cloudData.orders.length)) {
           setData(cloudData);
           setSelectedTaskId(cloudData.tasks[0]?.id ?? selectedTaskId);
         }
@@ -141,6 +141,50 @@ export default function Home() {
     }
   }
 
+  function buildOrder(taskId: string, talentId: string, source: PlatformOrder["source"]): PlatformOrder {
+    const task = data.tasks.find((item) => item.id === taskId);
+    const amount = task?.budget ?? 0;
+    const commissionRate = 10;
+    const commissionAmount = Math.round(amount * commissionRate / 100);
+    return {
+      id: `${taskId}-${talentId}-${source}`,
+      taskId,
+      talentId,
+      source,
+      amount,
+      commissionRate,
+      commissionAmount,
+      talentPayout: Math.max(0, amount - commissionAmount),
+      status: "pending_payment",
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  async function createOrder(order: PlatformOrder) {
+    setData((current) => ({
+      ...current,
+      orders: [order, ...current.orders.filter((item) => item.id !== order.id)]
+    }));
+    if (session) {
+      try {
+        await saveCloudOrder(order);
+      } catch (error) {
+        setNotice(`订单保存失败：${error instanceof Error ? error.message : "未知错误"}`);
+      }
+    }
+  }
+
+  async function setOrderStatus(orderId: string, status: PlatformOrder["status"]) {
+    setData((current) => ({ ...current, orders: current.orders.map((order) => order.id === orderId ? { ...order, status } : order) }));
+    if (session) {
+      try {
+        await updateCloudOrderStatus(orderId, status);
+      } catch (error) {
+        setNotice(`订单状态更新失败：${error instanceof Error ? error.message : "未知错误"}`);
+      }
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7f9] text-[#17212b]">
       <Header view={view} navigate={navigate} menuOpen={menuOpen} setMenuOpen={setMenuOpen} session={session} />
@@ -149,8 +193,8 @@ export default function Home() {
       {view === "auth" && <AuthPage session={session} setNotice={setNotice} />}
       {view === "post" && <TaskPost onSubmit={publishTask} />}
       {view === "profile" && <TalentProfileForm onSubmit={saveTalent} />}
-      {view === "market" && <TaskMarket tasks={data.tasks} talents={data.talents} applications={data.applications} selectedTaskId={selectedTaskId} setSelectedTaskId={setSelectedTaskId} navigate={navigate} onApply={applyToTask} setNotice={setNotice} />}
-      {view === "matches" && selectedTask && <MatchPage task={selectedTask} talents={data.talents} matches={selectedMatches} onStatusChange={setMatchStatus} setNotice={setNotice} />}
+      {view === "market" && <TaskMarket tasks={data.tasks} talents={data.talents} applications={data.applications} orders={data.orders} selectedTaskId={selectedTaskId} setSelectedTaskId={setSelectedTaskId} navigate={navigate} onApply={applyToTask} createOrder={createOrder} buildOrder={buildOrder} setNotice={setNotice} />}
+      {view === "matches" && selectedTask && <MatchPage task={selectedTask} talents={data.talents} matches={selectedMatches} orders={data.orders} onStatusChange={setMatchStatus} createOrder={createOrder} buildOrder={buildOrder} setOrderStatus={setOrderStatus} setNotice={setNotice} />}
       {view === "admin" && <Admin data={data} />}
     </main>
   );
@@ -231,7 +275,7 @@ function Landing({ navigate }: { navigate: (view: View) => void }) {
             <span className="eyebrow">LIVE FLOW</span>
             <h2 className="mt-2 text-xl font-semibold">双向选择的 AI 劳动力调度</h2>
             <div className="mt-5 grid gap-3">
-              {["企业发布任务", "AI 推荐执行者", "企业选中并联系个人", "个人申请承接企业任务", "后台追踪匹配和申请"].map((item, index) => <div className="flex items-center gap-3 rounded-lg bg-[#f2f4f7] p-4" key={item}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white text-sm font-semibold text-[#155eef]">{index + 1}</span><span className="font-medium">{item}</span></div>)}
+              {["企业发布任务", "AI 推荐执行者", "双方生成平台订单", "企业托管付款后开始执行", "平台抽佣并结算"].map((item, index) => <div className="flex items-center gap-3 rounded-lg bg-[#f2f4f7] p-4" key={item}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white text-sm font-semibold text-[#155eef]">{index + 1}</span><span className="font-medium">{item}</span></div>)}
             </div>
           </div>
         </div>
@@ -291,7 +335,7 @@ function TalentProfileForm({ onSubmit }: { onSubmit: (talent: TalentProfile) => 
   );
 }
 
-function TaskMarket({ tasks, talents, applications, selectedTaskId, setSelectedTaskId, navigate, onApply, setNotice }: { tasks: EnterpriseTask[]; talents: TalentProfile[]; applications: TaskApplication[]; selectedTaskId: string; setSelectedTaskId: (id: string) => void; navigate: (view: View) => void; onApply: (application: TaskApplication) => void; setNotice: (value: string) => void }) {
+function TaskMarket({ tasks, talents, applications, orders, selectedTaskId, setSelectedTaskId, navigate, onApply, createOrder, buildOrder, setNotice }: { tasks: EnterpriseTask[]; talents: TalentProfile[]; applications: TaskApplication[]; orders: PlatformOrder[]; selectedTaskId: string; setSelectedTaskId: (id: string) => void; navigate: (view: View) => void; onApply: (application: TaskApplication) => void; createOrder: (order: PlatformOrder) => void; buildOrder: (taskId: string, talentId: string, source: PlatformOrder["source"]) => PlatformOrder; setNotice: (value: string) => void }) {
   const [skill, setSkill] = useState("");
   const [budget, setBudget] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -318,6 +362,7 @@ function TaskMarket({ tasks, talents, applications, selectedTaskId, setSelectedT
       <div className="grid gap-4">
         {filtered.map((task) => {
           const hasApplied = Boolean(selectedTalent && applications.some((item) => item.taskId === task.id && item.talentId === selectedTalent.id));
+          const order = selectedTalent ? orders.find((item) => item.taskId === task.id && item.talentId === selectedTalent.id && item.source === "talent_application") : undefined;
           return <article className={`panel p-5 ${selectedTaskId === task.id ? "ring-2 ring-[#155eef]" : ""}`} key={task.id}>
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div><h2 className="text-xl font-semibold">{task.title}</h2><p className="mt-1 text-sm font-medium text-[#155eef]">{task.companyName}</p><p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">{task.description}</p><div className="mt-4 flex flex-wrap gap-2">{task.skills.map((item) => <Badge key={item}>{item}</Badge>)}</div></div>
@@ -326,15 +371,15 @@ function TaskMarket({ tasks, talents, applications, selectedTaskId, setSelectedT
             <div className="mt-5 flex flex-wrap gap-3">
               <button className="secondary" onClick={() => setSelectedTaskId(task.id)}><Search size={18} />选中任务</button>
               <button className="primary" onClick={() => { setSelectedTaskId(task.id); navigate("matches"); }}>查看 AI 匹配<ArrowRight size={18} /></button>
-              <button className="secondary" disabled={!selectedTalent || !task.companyContact} onClick={async () => {
+              <button className="secondary" disabled={!selectedTalent} onClick={async () => {
                 if (!selectedTalent) return setNotice("请先创建或选择个人资料。");
-                const application: TaskApplication = { id: `${task.id}-${selectedTalent.id}-application`, taskId: task.id, talentId: selectedTalent.id, status: "contacted", createdAt: new Date().toISOString() };
+                const application: TaskApplication = { id: `${task.id}-${selectedTalent.id}-application`, taskId: task.id, talentId: selectedTalent.id, status: "order_created", createdAt: new Date().toISOString() };
                 await onApply(application);
-                await navigator.clipboard?.writeText(task.companyContact);
-                setNotice(`已申请 ${task.companyName} 的任务，并复制企业联系方式：${task.companyContact}`);
-              }}>{hasApplied ? "再次复制企业联系方式" : "申请承接 / 联系企业"}</button>
+                await createOrder(buildOrder(task.id, selectedTalent.id, "talent_application"));
+                setNotice(`已为 ${task.companyName} 的任务生成平台订单。企业托管付款后再开放联系方式。`);
+              }}>{hasApplied ? "查看平台订单" : "申请合作 / 生成订单"}</button>
             </div>
-            {hasApplied && <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]">已申请该任务。企业联系方式：{task.companyContact || "未填写"}</div>}
+            {hasApplied && <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]">已申请该任务。{order ? `订单状态：${order.status}，平台佣金：¥${order.commissionAmount.toLocaleString()}，执行者预计收入：¥${order.talentPayout.toLocaleString()}` : "等待生成订单。"} 联系方式将在平台确认付款后开放。</div>}
           </article>;
         })}
       </div>
@@ -342,7 +387,7 @@ function TaskMarket({ tasks, talents, applications, selectedTaskId, setSelectedT
   );
 }
 
-function MatchPage({ task, talents, matches, onStatusChange, setNotice }: { task: EnterpriseTask; talents: TalentProfile[]; matches: MatchResult[]; onStatusChange: (matchId: string, status: MatchResult["status"]) => void; setNotice: (value: string) => void }) {
+function MatchPage({ task, talents, matches, orders, onStatusChange, createOrder, buildOrder, setOrderStatus, setNotice }: { task: EnterpriseTask; talents: TalentProfile[]; matches: MatchResult[]; orders: PlatformOrder[]; onStatusChange: (matchId: string, status: MatchResult["status"]) => void; createOrder: (order: PlatformOrder) => void; buildOrder: (taskId: string, talentId: string, source: PlatformOrder["source"]) => PlatformOrder; setOrderStatus: (orderId: string, status: PlatformOrder["status"]) => void; setNotice: (value: string) => void }) {
   return (
     <PageShell eyebrow="AI MATCHING" title="AI 匹配结果页面">
       <div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]">
@@ -351,12 +396,18 @@ function MatchPage({ task, talents, matches, onStatusChange, setNotice }: { task
           {matches.map((match) => {
             const talent = talents.find((item) => item.id === match.talentId);
             if (!talent) return null;
-            const isUnlocked = match.status === "selected" || match.status === "contacted";
+            const order = orders.find((item) => item.taskId === task.id && item.talentId === talent.id && item.source === "enterprise_invite");
+            const isUnlocked = order?.status === "completed";
             return <article className="panel p-5" key={match.id}>
               <div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold">{talent.name}</h2><p className="mt-1 text-sm text-[#667085]">{talent.availability} · 期望 ¥{talent.expectedIncome.toLocaleString()}</p></div><div className="grid gap-2 text-right"><span className="rounded-lg bg-[#ecfdf3] px-3 py-2 text-sm font-semibold text-[#027a48]">匹配 {match.score}</span><span className="text-xs text-[#667085]">{match.status === "contacted" ? "已联系" : match.status === "selected" ? "已选中" : "推荐中"}</span></div></div>
               <div className="mt-4 flex flex-wrap gap-2">{talent.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div>
-              <div className="mt-5 flex flex-wrap gap-3"><button className="primary" onClick={() => onStatusChange(match.id, "selected")}>选中执行者</button><button className="secondary" onClick={async () => { await onStatusChange(match.id, "contacted"); if (talent.contact) { await navigator.clipboard?.writeText(talent.contact); setNotice(`已复制 ${talent.name} 的联系方式：${talent.contact}`); } else setNotice(`${talent.name} 暂未填写联系方式。`); }}>联系 TA</button></div>
-              {isUnlocked && <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]"><b className="block">联系方式</b><span>{talent.contact || "该执行者还没有填写联系方式"}</span><p className="mt-2 text-[#475467]">建议先发送任务摘要、预算、截止时间和验收标准。</p></div>}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button className="primary" onClick={async () => { await onStatusChange(match.id, "selected"); await createOrder(buildOrder(task.id, talent.id, "enterprise_invite")); setNotice("已生成平台订单。请先完成托管付款，平台将保留佣金后再开放联系方式。"); }}>选中并生成订单</button>
+                {order && order.status === "pending_payment" && <button className="secondary" onClick={() => setOrderStatus(order.id, "escrowed")}>模拟托管付款</button>}
+                {order && order.status === "escrowed" && <button className="secondary" onClick={() => setOrderStatus(order.id, "completed")}>模拟确认完成</button>}
+              </div>
+              {order && <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]"><b className="block">平台订单</b><p>订单状态：{order.status}</p><p>任务金额：¥{order.amount.toLocaleString()} · 平台佣金 {order.commissionRate}%：¥{order.commissionAmount.toLocaleString()} · 执行者预计收入：¥{order.talentPayout.toLocaleString()}</p><p className="mt-2 text-[#475467]">付款前不开放联系方式，避免绕过平台成交。</p></div>}
+              {isUnlocked && <div className="mt-4 rounded-lg border border-[#abefc6] bg-[#ecfdf3] p-4 text-sm text-[#027a48]"><b className="block">订单已完成，联系方式已开放</b><span>{talent.contact || "该执行者还没有填写联系方式"}</span></div>}
               <h3 className="mt-5 font-semibold">匹配理由</h3><ul className="mt-2 grid gap-2 text-sm text-[#475467]">{match.reasons.map((reason) => <li className="rounded-lg bg-[#f2f4f7] p-3" key={reason}>{reason}</li>)}</ul>
               <h3 className="mt-5 font-semibold">推荐执行步骤</h3><ol className="mt-2 grid gap-2 text-sm text-[#475467]">{match.executionSteps.map((step, index) => <li className="rounded-lg border border-[#e4e7ec] p-3" key={step}>{index + 1}. {step}</li>)}</ol>
             </article>;
@@ -370,12 +421,13 @@ function MatchPage({ task, talents, matches, onStatusChange, setNotice }: { task
 function Admin({ data }: { data: AppData }) {
   return (
     <PageShell eyebrow="ADMIN" title="管理后台">
-      <div className="grid gap-4 md:grid-cols-4"><Stat label="企业任务" value={data.tasks.length} /><Stat label="个人用户" value={data.talents.length} /><Stat label="匹配记录" value={data.matches.length} /><Stat label="个人申请" value={data.applications.length} /></div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5"><Stat label="企业任务" value={data.tasks.length} /><Stat label="个人用户" value={data.talents.length} /><Stat label="匹配记录" value={data.matches.length} /><Stat label="个人申请" value={data.applications.length} /><Stat label="平台订单" value={data.orders.length} /></div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-5">
         <AdminList title="企业任务" items={data.tasks.map((task) => `${task.companyName} · ${task.title} · ¥${task.budget.toLocaleString()}`)} />
         <AdminList title="个人用户" items={data.talents.map((talent) => `${talent.name} · ${talent.contact || "未填联系方式"} · ${talent.skills.join("、")}`)} />
         <AdminList title="匹配记录" items={data.matches.map((match) => `${match.taskId.slice(0, 8)} → ${match.talentId.slice(0, 10)} · ${match.score} · ${match.status}`)} />
         <AdminList title="个人申请" items={data.applications.map((application) => { const task = data.tasks.find((item) => item.id === application.taskId); const talent = data.talents.find((item) => item.id === application.talentId); return `${talent?.name ?? application.talentId} → ${task?.companyName ?? "企业"} · ${task?.title ?? application.taskId} · ${application.status}`; })} />
+        <AdminList title="平台订单" items={data.orders.map((order) => `${order.source} · ¥${order.amount.toLocaleString()} · 佣金 ¥${order.commissionAmount.toLocaleString()} · ${order.status}`)} />
       </div>
     </PageShell>
   );

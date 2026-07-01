@@ -60,6 +60,19 @@ create table if not exists public.task_applications (
   created_at timestamptz not null
 );
 
+create table if not exists public.platform_orders (
+  id text primary key,
+  task_id text not null references public.enterprise_tasks(id) on delete cascade,
+  talent_id text not null references public.talent_profiles(id) on delete cascade,
+  source text not null,
+  amount integer not null,
+  commission_rate numeric(5, 2) not null default 10.00,
+  commission_amount integer not null,
+  talent_payout integer not null,
+  status text not null default 'pending_payment',
+  created_at timestamptz not null
+);
+
 create table if not exists public.admin_events (
   id text primary key,
   actor_type text not null,
@@ -77,6 +90,9 @@ create index if not exists idx_task_matches_talent_id on public.task_matches(tal
 create index if not exists idx_task_matches_score on public.task_matches(score);
 create index if not exists idx_task_applications_task_id on public.task_applications(task_id);
 create index if not exists idx_task_applications_talent_id on public.task_applications(talent_id);
+create index if not exists idx_platform_orders_task_id on public.platform_orders(task_id);
+create index if not exists idx_platform_orders_talent_id on public.platform_orders(talent_id);
+create index if not exists idx_platform_orders_status on public.platform_orders(status);
 
 alter table public.enterprise_tasks add column if not exists company_name text not null default '';
 alter table public.enterprise_tasks add column if not exists company_contact text not null default '';
@@ -88,6 +104,7 @@ alter table public.ai_task_breakdowns enable row level security;
 alter table public.talent_profiles enable row level security;
 alter table public.task_matches enable row level security;
 alter table public.task_applications enable row level security;
+alter table public.platform_orders enable row level security;
 alter table public.admin_events enable row level security;
 
 drop policy if exists "authenticated users can read tasks" on public.enterprise_tasks;
@@ -105,6 +122,9 @@ drop policy if exists "authenticated users can update matches" on public.task_ma
 drop policy if exists "authenticated users can read applications" on public.task_applications;
 drop policy if exists "authenticated users can write applications" on public.task_applications;
 drop policy if exists "authenticated users can update applications" on public.task_applications;
+drop policy if exists "authenticated users can read orders" on public.platform_orders;
+drop policy if exists "authenticated users can write orders" on public.platform_orders;
+drop policy if exists "authenticated users can update orders" on public.platform_orders;
 drop policy if exists "authenticated users can read events" on public.admin_events;
 drop policy if exists "authenticated users can write events" on public.admin_events;
 
@@ -127,6 +147,10 @@ create policy "authenticated users can update matches" on public.task_matches fo
 create policy "authenticated users can read applications" on public.task_applications for select to authenticated using (true);
 create policy "authenticated users can write applications" on public.task_applications for insert to authenticated with check (true);
 create policy "authenticated users can update applications" on public.task_applications for update to authenticated using (true) with check (true);
+
+create policy "authenticated users can read orders" on public.platform_orders for select to authenticated using (true);
+create policy "authenticated users can write orders" on public.platform_orders for insert to authenticated with check (true);
+create policy "authenticated users can update orders" on public.platform_orders for update to authenticated using (true) with check (true);
 
 create policy "authenticated users can read events" on public.admin_events for select to authenticated using (true);
 create policy "authenticated users can write events" on public.admin_events for insert to authenticated with check (true);

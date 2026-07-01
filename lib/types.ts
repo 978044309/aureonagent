@@ -54,7 +54,20 @@ export interface TaskApplication {
   id: string;
   taskId: string;
   talentId: string;
-  status: "applied" | "contacted" | "accepted" | "declined";
+  status: "applied" | "order_created" | "accepted" | "declined";
+  createdAt: string;
+}
+
+export interface PlatformOrder {
+  id: string;
+  taskId: string;
+  talentId: string;
+  source: "enterprise_invite" | "talent_application";
+  amount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  talentPayout: number;
+  status: "pending_payment" | "escrowed" | "in_progress" | "delivered" | "completed";
   createdAt: string;
 }
 
@@ -63,4 +76,5 @@ export interface AppData {
   talents: TalentProfile[];
   matches: MatchResult[];
   applications: TaskApplication[];
+  orders: PlatformOrder[];
 }
