@@ -14,7 +14,7 @@ const adminTables: Record<AdminEntityKind, string> = {
 export async function loadCloudData() {
   if (!supabase) return null;
 
-  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }, { data: applications, error: applicationsError }, { data: orders, error: ordersError }] = await Promise.all([
+  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }, applicationsResult, ordersResult] = await Promise.all([
     supabase.from("enterprise_tasks").select("*, ai_task_breakdowns(*)").order("created_at", { ascending: false }),
     supabase.from("talent_profiles").select("*").order("created_at", { ascending: false }),
     supabase.from("task_matches").select("*").order("score", { ascending: false }),
@@ -22,16 +22,16 @@ export async function loadCloudData() {
     supabase.from("platform_orders").select("*").order("created_at", { ascending: false }),
   ]);
 
-  if (tasksError || talentsError || matchesError || applicationsError || ordersError) {
-    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || applicationsError?.message || ordersError?.message || "Unable to load cloud data");
+  if (tasksError || talentsError || matchesError) {
+    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || "Unable to load cloud data");
   }
 
   return {
     tasks: (tasks ?? []).map(mapTask),
     talents: (talents ?? []).map(mapTalent),
     matches: (matches ?? []).map(mapMatch),
-    applications: (applications ?? []).map(mapApplication),
-    orders: (orders ?? []).map(mapOrder)
+    applications: applicationsResult.error ? [] : (applicationsResult.data ?? []).map(mapApplication),
+    orders: ordersResult.error ? [] : (ordersResult.data ?? []).map(mapOrder)
   };
 }
 
