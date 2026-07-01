@@ -71,6 +71,21 @@ alter table public.talent_profiles enable row level security;
 alter table public.task_matches enable row level security;
 alter table public.admin_events enable row level security;
 
+drop policy if exists "authenticated users can read tasks" on public.enterprise_tasks;
+drop policy if exists "authenticated users can write tasks" on public.enterprise_tasks;
+drop policy if exists "authenticated users can update tasks" on public.enterprise_tasks;
+drop policy if exists "authenticated users can read breakdowns" on public.ai_task_breakdowns;
+drop policy if exists "authenticated users can write breakdowns" on public.ai_task_breakdowns;
+drop policy if exists "authenticated users can update breakdowns" on public.ai_task_breakdowns;
+drop policy if exists "authenticated users can read talents" on public.talent_profiles;
+drop policy if exists "authenticated users can write talents" on public.talent_profiles;
+drop policy if exists "authenticated users can update talents" on public.talent_profiles;
+drop policy if exists "authenticated users can read matches" on public.task_matches;
+drop policy if exists "authenticated users can write matches" on public.task_matches;
+drop policy if exists "authenticated users can update matches" on public.task_matches;
+drop policy if exists "authenticated users can read events" on public.admin_events;
+drop policy if exists "authenticated users can write events" on public.admin_events;
+
 create policy "authenticated users can read tasks" on public.enterprise_tasks for select to authenticated using (true);
 create policy "authenticated users can write tasks" on public.enterprise_tasks for insert to authenticated with check (true);
 create policy "authenticated users can update tasks" on public.enterprise_tasks for update to authenticated using (true) with check (true);
