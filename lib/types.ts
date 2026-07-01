@@ -16,6 +16,8 @@ export interface TaskBreakdown {
 
 export interface EnterpriseTask {
   id: string;
+  companyName: string;
+  companyContact: string;
   title: string;
   description: string;
   budget: number;
@@ -48,8 +50,17 @@ export interface MatchResult {
   createdAt: string;
 }
 
+export interface TaskApplication {
+  id: string;
+  taskId: string;
+  talentId: string;
+  status: "applied" | "contacted" | "accepted" | "declined";
+  createdAt: string;
+}
+
 export interface AppData {
   tasks: EnterpriseTask[];
   talents: TalentProfile[];
   matches: MatchResult[];
+  applications: TaskApplication[];
 }

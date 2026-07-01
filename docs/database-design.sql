@@ -3,6 +3,8 @@
 
 create table if not exists public.enterprise_tasks (
   id text primary key,
+  company_name text not null default '',
+  company_contact text not null default '',
   title text not null,
   description text not null,
   budget integer not null,
@@ -50,6 +52,14 @@ create table if not exists public.task_matches (
   created_at timestamptz not null
 );
 
+create table if not exists public.task_applications (
+  id text primary key,
+  task_id text not null references public.enterprise_tasks(id) on delete cascade,
+  talent_id text not null references public.talent_profiles(id) on delete cascade,
+  status text not null default 'applied',
+  created_at timestamptz not null
+);
+
 create table if not exists public.admin_events (
   id text primary key,
   actor_type text not null,
@@ -65,7 +75,11 @@ create index if not exists idx_enterprise_tasks_deadline on public.enterprise_ta
 create index if not exists idx_task_matches_task_id on public.task_matches(task_id);
 create index if not exists idx_task_matches_talent_id on public.task_matches(talent_id);
 create index if not exists idx_task_matches_score on public.task_matches(score);
+create index if not exists idx_task_applications_task_id on public.task_applications(task_id);
+create index if not exists idx_task_applications_talent_id on public.task_applications(talent_id);
 
+alter table public.enterprise_tasks add column if not exists company_name text not null default '';
+alter table public.enterprise_tasks add column if not exists company_contact text not null default '';
 alter table public.talent_profiles add column if not exists contact text not null default '';
 alter table public.task_matches add column if not exists status text not null default 'recommended';
 
@@ -73,6 +87,7 @@ alter table public.enterprise_tasks enable row level security;
 alter table public.ai_task_breakdowns enable row level security;
 alter table public.talent_profiles enable row level security;
 alter table public.task_matches enable row level security;
+alter table public.task_applications enable row level security;
 alter table public.admin_events enable row level security;
 
 drop policy if exists "authenticated users can read tasks" on public.enterprise_tasks;
@@ -87,6 +102,9 @@ drop policy if exists "authenticated users can update talents" on public.talent_
 drop policy if exists "authenticated users can read matches" on public.task_matches;
 drop policy if exists "authenticated users can write matches" on public.task_matches;
 drop policy if exists "authenticated users can update matches" on public.task_matches;
+drop policy if exists "authenticated users can read applications" on public.task_applications;
+drop policy if exists "authenticated users can write applications" on public.task_applications;
+drop policy if exists "authenticated users can update applications" on public.task_applications;
 drop policy if exists "authenticated users can read events" on public.admin_events;
 drop policy if exists "authenticated users can write events" on public.admin_events;
 
@@ -105,6 +123,10 @@ create policy "authenticated users can update talents" on public.talent_profiles
 create policy "authenticated users can read matches" on public.task_matches for select to authenticated using (true);
 create policy "authenticated users can write matches" on public.task_matches for insert to authenticated with check (true);
 create policy "authenticated users can update matches" on public.task_matches for update to authenticated using (true) with check (true);
+
+create policy "authenticated users can read applications" on public.task_applications for select to authenticated using (true);
+create policy "authenticated users can write applications" on public.task_applications for insert to authenticated with check (true);
+create policy "authenticated users can update applications" on public.task_applications for update to authenticated using (true) with check (true);
 
 create policy "authenticated users can read events" on public.admin_events for select to authenticated using (true);
 create policy "authenticated users can write events" on public.admin_events for insert to authenticated with check (true);

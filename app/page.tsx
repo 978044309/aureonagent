@@ -17,10 +17,10 @@ import {
   UsersRound,
   X
 } from "lucide-react";
-import { loadCloudData, saveCloudMatches, saveCloudTalent, saveCloudTask, updateCloudMatchStatus } from "@/lib/cloudStore";
+import { loadCloudData, saveCloudApplication, saveCloudMatches, saveCloudTalent, saveCloudTask, updateCloudMatchStatus } from "@/lib/cloudStore";
 import { createMatches, generateTaskBreakdown, normalizeSkills } from "@/lib/mockAi";
 import { isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
-import { AppData, EnterpriseTask, MatchResult, TalentProfile } from "@/lib/types";
+import { AppData, EnterpriseTask, MatchResult, TalentProfile, TaskApplication } from "@/lib/types";
 
 type View = "home" | "auth" | "post" | "profile" | "market" | "matches" | "admin";
 
@@ -28,6 +28,8 @@ const seedData: AppData = {
   tasks: [
     {
       id: "task-website",
+      companyName: "Northstar SaaS",
+      companyContact: "founder@northstar.example",
       title: "为 B2B SaaS 产品制作官网首屏和定价页",
       description: "需要根据现有产品说明，完成官网信息架构、首屏文案、定价页布局和可交互前端页面。",
       budget: 12000,
@@ -60,7 +62,8 @@ const seedData: AppData = {
       createdAt: "2026-06-27T12:00:00.000Z"
     }
   ],
-  matches: []
+  matches: [],
+  applications: []
 };
 
 function hydrateSeed(): AppData {
@@ -77,7 +80,10 @@ export default function Home() {
 
   useEffect(() => {
     const saved = localStorage.getItem("ai-workforce-data");
-    if (saved) setData(JSON.parse(saved));
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setData({ ...hydrateSeed(), ...parsed, applications: parsed.applications ?? [] });
+    }
   }, []);
 
   useEffect(() => {
@@ -164,6 +170,24 @@ export default function Home() {
     }
   }
 
+  async function applyToTask(application: TaskApplication) {
+    setData((current) => ({
+      ...current,
+      applications: [
+        application,
+        ...current.applications.filter((item) => !(item.taskId === application.taskId && item.talentId === application.talentId))
+      ]
+    }));
+    if (session) {
+      try {
+        await saveCloudApplication(application);
+        setNotice("申请已保存到云端，企业可在管理后台查看。");
+      } catch (error) {
+        setNotice(`申请保存失败：${error instanceof Error ? error.message : "未知错误"}`);
+      }
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7f9] text-[#17212b]">
       <Header view={view} navigate={navigate} menuOpen={menuOpen} setMenuOpen={setMenuOpen} session={session} />
@@ -172,7 +196,7 @@ export default function Home() {
       {view === "auth" && <AuthPage session={session} setNotice={setNotice} />}
       {view === "post" && <TaskPost onSubmit={publishTask} />}
       {view === "profile" && <TalentProfileForm onSubmit={saveTalent} />}
-      {view === "market" && <TaskMarket tasks={data.tasks} selectedTaskId={selectedTaskId} setSelectedTaskId={setSelectedTaskId} navigate={navigate} />}
+      {view === "market" && <TaskMarket tasks={data.tasks} talents={data.talents} applications={data.applications} selectedTaskId={selectedTaskId} setSelectedTaskId={setSelectedTaskId} navigate={navigate} onApply={applyToTask} setNotice={setNotice} />}
       {view === "matches" && selectedTask && <MatchPage task={selectedTask} talents={data.talents} matches={selectedMatches} onStatusChange={setMatchStatus} setNotice={setNotice} />}
       {view === "admin" && <Admin data={data} />}
     </main>
@@ -300,13 +324,15 @@ function Landing({ navigate }: { navigate: (view: View) => void }) {
 }
 
 function TaskPost({ onSubmit }: { onSubmit: (task: EnterpriseTask) => void }) {
-  const [form, setForm] = useState({ title: "", description: "", budget: 10000, deadline: "2026-07-20", skills: "产品, 设计, 前端" });
+  const [form, setForm] = useState({ companyName: "", companyContact: "", title: "", description: "", budget: 10000, deadline: "2026-07-20", skills: "产品, 设计, 前端" });
   const skills = normalizeSkills(form.skills);
   const ai = useMemo(() => generateTaskBreakdown(form.title, form.description, form.budget, skills), [form.title, form.description, form.budget, form.skills]);
 
   function submit() {
     onSubmit({
       id: crypto.randomUUID(),
+      companyName: form.companyName || "未命名企业",
+      companyContact: form.companyContact,
       title: form.title || "未命名任务",
       description: form.description,
       budget: form.budget,
@@ -323,12 +349,14 @@ function TaskPost({ onSubmit }: { onSubmit: (task: EnterpriseTask) => void }) {
       <div className="grid gap-6 lg:grid-cols-[1fr_.9fr]">
         <div className="panel p-6">
           <div className="grid gap-4">
+            <Field label="企业名称" value={form.companyName} onChange={(companyName) => setForm({ ...form, companyName })} placeholder="例如：Northstar SaaS" />
+            <Field label="企业联系方式（邮箱/微信/电话）" value={form.companyContact} onChange={(companyContact) => setForm({ ...form, companyContact })} placeholder="用于个人申请后联系" />
             <Field label="任务标题" value={form.title} onChange={(title) => setForm({ ...form, title })} placeholder="例如：制作产品官网和投放落地页" />
             <TextArea label="任务描述" value={form.description} onChange={(description) => setForm({ ...form, description })} placeholder="描述目标、交付物、参考资料、验收标准..." />
             <NumberField label="预算（元）" value={form.budget} onChange={(budget) => setForm({ ...form, budget })} />
             <Field label="截止时间" type="date" value={form.deadline} onChange={(deadline) => setForm({ ...form, deadline })} />
             <Field label="所需技能" value={form.skills} onChange={(skills) => setForm({ ...form, skills })} placeholder="产品, 设计, 前端, AI" />
-            <button className="primary justify-center" disabled={!form.title || !form.description} onClick={submit}><Sparkles size={18} />发布并生成匹配</button>
+            <button className="primary justify-center" disabled={!form.title || !form.description || !form.companyContact} onClick={submit}><Sparkles size={18} />发布并生成匹配</button>
           </div>
         </div>
         <AiBreakdown ai={ai} skills={skills} />
@@ -369,27 +397,35 @@ function TalentProfileForm({ onSubmit }: { onSubmit: (talent: TalentProfile) => 
   );
 }
 
-function TaskMarket({ tasks, selectedTaskId, setSelectedTaskId, navigate }: { tasks: EnterpriseTask[]; selectedTaskId: string; setSelectedTaskId: (id: string) => void; navigate: (view: View) => void }) {
+function TaskMarket({ tasks, talents, applications, selectedTaskId, setSelectedTaskId, navigate, onApply, setNotice }: { tasks: EnterpriseTask[]; talents: TalentProfile[]; applications: TaskApplication[]; selectedTaskId: string; setSelectedTaskId: (id: string) => void; navigate: (view: View) => void; onApply: (application: TaskApplication) => void; setNotice: (value: string) => void }) {
   const [skill, setSkill] = useState("");
   const [budget, setBudget] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [talentId, setTalentId] = useState(talents[0]?.id ?? "");
   const filtered = tasks.filter((task) => (!skill || task.skills.includes(skill)) && (!budget || task.budget >= Number(budget)) && (!deadline || task.deadline <= deadline));
   const skills = Array.from(new Set(tasks.flatMap((task) => task.skills)));
+  useEffect(() => {
+    if (!talentId && talents[0]?.id) setTalentId(talents[0].id);
+  }, [talentId, talents]);
+  const selectedTalent = talents.find((talent) => talent.id === talentId);
 
   return (
     <PageShell eyebrow="MARKET" title="任务大厅">
-      <div className="mb-5 grid gap-3 rounded-xl border border-[#d0d5dd] bg-white p-4 md:grid-cols-4">
+      <div className="mb-5 grid gap-3 rounded-xl border border-[#d0d5dd] bg-white p-4 md:grid-cols-5">
+        <Select label="以哪个个人资料申请" value={talentId} onChange={setTalentId} options={talents.map((talent) => talent.id)} />
         <Select label="按技能筛选" value={skill} onChange={setSkill} options={["", ...skills]} />
         <Field label="最低预算" type="number" value={budget} onChange={setBudget} />
         <Field label="截止时间早于" type="date" value={deadline} onChange={setDeadline} />
         <div className="flex items-end"><button className="secondary w-full justify-center" onClick={() => { setSkill(""); setBudget(""); setDeadline(""); }}><ListFilter size={18} />重置筛选</button></div>
       </div>
+      {selectedTalent && <p className="mb-4 text-sm text-[#667085]">当前申请人：{selectedTalent.name} · {selectedTalent.contact}</p>}
       <div className="grid gap-4">
         {filtered.map((task) => (
           <article className={`panel p-5 ${selectedTaskId === task.id ? "ring-2 ring-[#155eef]" : ""}`} key={task.id}>
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="text-xl font-semibold">{task.title}</h2>
+                <p className="mt-1 text-sm font-medium text-[#155eef]">{task.companyName}</p>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">{task.description}</p>
                 <div className="mt-4 flex flex-wrap gap-2">{task.skills.map((item) => <Badge key={item}>{item}</Badge>)}</div>
               </div>
@@ -401,7 +437,26 @@ function TaskMarket({ tasks, selectedTaskId, setSelectedTaskId, navigate }: { ta
             <div className="mt-5 flex flex-wrap gap-3">
               <button className="secondary" onClick={() => setSelectedTaskId(task.id)}><Search size={18} />选中任务</button>
               <button className="primary" onClick={() => { setSelectedTaskId(task.id); navigate("matches"); }}>查看 AI 匹配<ArrowRight size={18} /></button>
+              <button className="secondary" disabled={!talentId || !task.companyContact} onClick={async () => {
+                const talent = talents.find((item) => item.id === talentId);
+                if (!talent) return setNotice("请先创建或选择个人资料。");
+                const application: TaskApplication = {
+                  id: `${task.id}-${talent.id}-application`,
+                  taskId: task.id,
+                  talentId: talent.id,
+                  status: "contacted",
+                  createdAt: new Date().toISOString()
+                };
+                await onApply(application);
+                await navigator.clipboard?.writeText(task.companyContact);
+                setNotice(`已申请 ${task.companyName} 的任务，并复制企业联系方式：${task.companyContact}`);
+              }}>申请承接 / 联系企业</button>
             </div>
+            {applications.some((item) => item.taskId === task.id && item.talentId === talentId) && (
+              <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]">
+                已申请该任务。企业联系方式：{task.companyContact || "未填写"}
+              </div>
+            )}
           </article>
         ))}
       </div>
@@ -464,15 +519,21 @@ function MatchPage({ task, talents, matches, onStatusChange, setNotice }: { task
 function Admin({ data }: { data: AppData }) {
   return (
     <PageShell eyebrow="ADMIN" title="管理后台">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Stat label="企业任务" value={data.tasks.length} />
         <Stat label="个人用户" value={data.talents.length} />
         <Stat label="匹配记录" value={data.matches.length} />
+        <Stat label="个人申请" value={data.applications.length} />
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid gap-6 lg:grid-cols-4">
         <AdminList title="企业任务" items={data.tasks.map((task) => `${task.title} · ¥${task.budget.toLocaleString()} · ${task.status}`)} />
         <AdminList title="个人用户" items={data.talents.map((talent) => `${talent.name} · ${talent.contact || "未填联系方式"} · ${talent.skills.join("、")} · ¥${talent.expectedIncome.toLocaleString()}`)} />
         <AdminList title="匹配记录" items={data.matches.map((match) => `${match.taskId.slice(0, 8)} → ${match.talentId.slice(0, 10)} · ${match.score} · ${match.status}`)} />
+        <AdminList title="个人申请" items={data.applications.map((application) => {
+          const task = data.tasks.find((item) => item.id === application.taskId);
+          const talent = data.talents.find((item) => item.id === application.talentId);
+          return `${talent?.name ?? application.talentId} → ${task?.companyName ?? "企业"} · ${task?.title ?? application.taskId} · ${application.status}`;
+        })} />
       </div>
     </PageShell>
   );

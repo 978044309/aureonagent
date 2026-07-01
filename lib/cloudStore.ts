@@ -1,23 +1,25 @@
-import { EnterpriseTask, MatchResult, TalentProfile } from "./types";
+import { EnterpriseTask, MatchResult, TalentProfile, TaskApplication } from "./types";
 import { supabase } from "./supabaseClient";
 
 export async function loadCloudData() {
   if (!supabase) return null;
 
-  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }] = await Promise.all([
+  const [{ data: tasks, error: tasksError }, { data: talents, error: talentsError }, { data: matches, error: matchesError }, { data: applications, error: applicationsError }] = await Promise.all([
     supabase.from("enterprise_tasks").select("*, ai_task_breakdowns(*)").order("created_at", { ascending: false }),
     supabase.from("talent_profiles").select("*").order("created_at", { ascending: false }),
     supabase.from("task_matches").select("*").order("score", { ascending: false }),
+    supabase.from("task_applications").select("*").order("created_at", { ascending: false }),
   ]);
 
-  if (tasksError || talentsError || matchesError) {
-    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || "Unable to load cloud data");
+  if (tasksError || talentsError || matchesError || applicationsError) {
+    throw new Error(tasksError?.message || talentsError?.message || matchesError?.message || applicationsError?.message || "Unable to load cloud data");
   }
 
   return {
     tasks: (tasks ?? []).map(mapTask),
     talents: (talents ?? []).map(mapTalent),
-    matches: (matches ?? []).map(mapMatch)
+    matches: (matches ?? []).map(mapMatch),
+    applications: (applications ?? []).map(mapApplication)
   };
 }
 
@@ -25,6 +27,8 @@ export async function saveCloudTask(task: EnterpriseTask) {
   if (!supabase) return;
   const { error: taskError } = await supabase.from("enterprise_tasks").upsert({
     id: task.id,
+    company_name: task.companyName,
+    company_contact: task.companyContact,
     title: task.title,
     description: task.description,
     budget: task.budget,
@@ -91,10 +95,24 @@ export async function updateCloudMatchStatus(matchId: string, status: MatchResul
   if (error) throw new Error(error.message);
 }
 
+export async function saveCloudApplication(application: TaskApplication) {
+  if (!supabase) return;
+  const { error } = await supabase.from("task_applications").upsert({
+    id: application.id,
+    task_id: application.taskId,
+    talent_id: application.talentId,
+    status: application.status,
+    created_at: application.createdAt
+  });
+  if (error) throw new Error(error.message);
+}
+
 function mapTask(row: any): EnterpriseTask {
   const breakdown = Array.isArray(row.ai_task_breakdowns) ? row.ai_task_breakdowns[0] : row.ai_task_breakdowns;
   return {
     id: row.id,
+    companyName: row.company_name ?? "未命名企业",
+    companyContact: row.company_contact ?? "",
     title: row.title,
     description: row.description,
     budget: row.budget,
@@ -144,6 +162,16 @@ function mapMatch(row: any): MatchResult {
     status: row.status ?? "recommended",
     reasons: row.reasons_json ?? [],
     executionSteps: row.execution_steps_json ?? [],
+    createdAt: row.created_at
+  };
+}
+
+function mapApplication(row: any): TaskApplication {
+  return {
+    id: row.id,
+    taskId: row.task_id,
+    talentId: row.talent_id,
+    status: (row.status ?? "applied") as TaskApplication["status"],
     createdAt: row.created_at
   };
 }
