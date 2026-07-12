@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { ArrowRight, BriefcaseBusiness, CalendarClock, CheckCircle2, LayoutDashboard, ListFilter, Menu, Search, Sparkles, UserRound, UsersRound, X } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CalendarClock, CheckCircle2, FileCheck2, LayoutDashboard, ListFilter, Menu, Search, Sparkles, Star, UserRound, UsersRound, X } from "lucide-react";
 import { AdminEntityKind, deleteCloudEntity, isCurrentUserAdmin, loadCloudData, saveCloudApplication, saveCloudMatches, saveCloudOrder, saveCloudTalent, saveCloudTask, updateCloudMatchStatus, updateCloudOrderStatus } from "@/lib/cloudStore";
 import { createMatches, generateTaskBreakdown, normalizeSkills } from "@/lib/mockAi";
 import { isSupabaseConfigured, supabase } from "@/lib/supabaseClient";
@@ -11,22 +11,22 @@ import { AppData, EnterpriseTask, MatchResult, PlatformOrder, TalentProfile, Tas
 type View = "home" | "auth" | "post" | "profile" | "market" | "matches" | "admin";
 
 const seedTask: EnterpriseTask = {
-  id: "task-website",
+  id: "trial-growth",
   companyName: "Northstar SaaS",
   companyContact: "founder@northstar.example",
-  title: "为 B2B SaaS 产品制作官网首屏和定价页",
-  description: "需要根据现有产品说明，完成官网信息架构、首屏文案、定价页布局和可交互前端页面。",
+  title: "验证海外获客渠道并产出首批线索",
+  description: "我们要验证一个面向北美中小企业的 AI 工具获客方案，需要梳理目标客户画像、测试 2 个渠道、产出触达脚本和线索表。",
   budget: 12000,
-  deadline: "2026-07-18",
-  skills: ["产品", "设计", "前端", "文案"],
+  deadline: "2026-07-28",
+  skills: ["海外获客", "市场调研", "内容运营", "AI"],
   status: "published",
-  createdAt: "2026-06-29T09:00:00.000Z",
-  ai: generateTaskBreakdown("为 B2B SaaS 产品制作官网首屏和定价页", "需要根据现有产品说明，完成官网信息架构、首屏文案、定价页布局和可交互前端页面。", 12000, ["产品", "设计", "前端", "文案"])
+  createdAt: "2026-07-01T09:00:00.000Z",
+  ai: generateTaskBreakdown("验证海外获客渠道并产出首批线索", "验证北美中小企业 AI 工具获客方案，产出目标画像、渠道测试、触达脚本和线索表。", 12000, ["海外获客", "市场调研", "内容运营", "AI"])
 };
 
 const seedTalents: TalentProfile[] = [
-  { id: "talent-lin", name: "林舟", contact: "lin@example.com", skills: ["产品", "前端", "AI"], availability: "每周 20 小时", expectedIncome: 9000, experience: "做过 SaaS 官网和 AI 工具 MVP，熟悉需求拆解和 React 交付。", createdAt: "2026-06-28T12:00:00.000Z" },
-  { id: "talent-chen", name: "陈若宁", contact: "chen@example.com", skills: ["设计", "文案", "运营"], availability: "每周 12 小时", expectedIncome: 7000, experience: "擅长创业项目品牌表达、落地页结构和转化文案。", createdAt: "2026-06-27T12:00:00.000Z" }
+  { id: "talent-lin", name: "林舟", contact: "lin@example.com", skills: ["海外获客", "内容运营", "AI"], availability: "每周 20 小时", expectedIncome: 9000, experience: "完成过 3 个 B2B 出海获客项目，交付过客户画像、冷启动邮件脚本和线索表，2 家企业复购。", createdAt: "2026-07-01T10:00:00.000Z" },
+  { id: "talent-chen", name: "陈若宁", contact: "chen@example.com", skills: ["市场调研", "数据整理", "文案"], availability: "每周 15 小时", expectedIncome: 7000, experience: "交付过竞品调研、用户访谈整理和增长素材库，企业评价集中在结构清晰和按期交付。", createdAt: "2026-07-01T11:00:00.000Z" }
 ];
 
 function hydrateSeed(): AppData {
@@ -37,89 +37,72 @@ function buildDemoData(): AppData {
   const createdAt = new Date().toISOString();
   const tasks: EnterpriseTask[] = [
     {
-      id: "demo-task-brand",
+      id: "demo-trial-growth",
       companyName: "Aureon Labs",
       companyContact: "ops@aureonlabs.example",
-      title: "为 AI 工具设计品牌视觉和落地页",
-      description: "完成品牌基础视觉、首屏结构、落地页文案和可交互页面原型，用于产品发布前测试。",
+      title: "验证海外获客渠道并产出首批线索",
+      description: "提交真实经营问题：我们要验证北美市场冷启动获客是否可行，需要目标客户画像、渠道假设、触达脚本和 30 条线索。",
       budget: 18000,
-      deadline: "2026-07-28",
-      skills: ["产品", "设计", "前端", "文案"],
+      deadline: "2026-08-05",
+      skills: ["海外获客", "市场调研", "文案", "AI"],
       status: "published",
       createdAt,
-      ai: generateTaskBreakdown("为 AI 工具设计品牌视觉和落地页", "完成品牌基础视觉、首屏结构、落地页文案和可交互页面原型，用于产品发布前测试。", 18000, ["产品", "设计", "前端", "文案"])
+      ai: generateTaskBreakdown("验证海外获客渠道并产出首批线索", "北美市场冷启动获客，目标客户画像、渠道假设、触达脚本和线索。", 18000, ["海外获客", "市场调研", "文案", "AI"])
     },
     {
-      id: "demo-task-data",
-      companyName: "Bright Retail",
-      companyContact: "pm@brightretail.example",
-      title: "搭建销售数据分析仪表盘",
-      description: "整理销售数据，定义核心指标，制作可视化仪表盘并输出经营洞察。",
-      budget: 15000,
-      deadline: "2026-07-24",
-      skills: ["数据分析", "后端", "产品"],
-      status: "published",
-      createdAt,
-      ai: generateTaskBreakdown("搭建销售数据分析仪表盘", "整理销售数据，定义核心指标，制作可视化仪表盘并输出经营洞察。", 15000, ["数据分析", "后端", "产品"])
-    },
-    {
-      id: "demo-task-content",
+      id: "demo-trial-content",
       companyName: "Northstar Education",
       companyContact: "growth@northstar.example",
-      title: "制作 30 天短视频内容计划",
-      description: "围绕在线课程设计短视频选题、脚本框架、发布节奏和复盘指标。",
-      budget: 8000,
-      deadline: "2026-07-20",
-      skills: ["运营", "文案", "AI"],
+      title: "用 30 天内容试工验证增长能力",
+      description: "围绕在线课程产品设计 30 天内容计划，交付选题库、脚本模板、发布节奏和复盘指标。",
+      budget: 9000,
+      deadline: "2026-07-30",
+      skills: ["内容运营", "文案", "AI"],
       status: "published",
       createdAt,
-      ai: generateTaskBreakdown("制作 30 天短视频内容计划", "围绕在线课程设计短视频选题、脚本框架、发布节奏和复盘指标。", 8000, ["运营", "文案", "AI"])
+      ai: generateTaskBreakdown("用 30 天内容试工验证增长能力", "在线课程 30 天内容计划，选题库、脚本模板、发布节奏和复盘指标。", 9000, ["内容运营", "文案", "AI"])
     },
     {
-      id: "demo-task-automation",
+      id: "demo-trial-data",
+      companyName: "Bright Retail",
+      companyContact: "pm@brightretail.example",
+      title: "整理销售数据并输出经营看板",
+      description: "清洗销售 CSV，定义复购、客单价和渠道 ROI 指标，交付可复用看板和经营洞察。",
+      budget: 15000,
+      deadline: "2026-08-02",
+      skills: ["数据整理", "数据分析", "AI自动化"],
+      status: "published",
+      createdAt,
+      ai: generateTaskBreakdown("整理销售数据并输出经营看板", "清洗销售数据，定义指标，交付看板和经营洞察。", 15000, ["数据整理", "数据分析", "AI自动化"])
+    },
+    {
+      id: "demo-trial-automation",
       companyName: "Atlas Ops",
       companyContact: "founder@atlasops.example",
-      title: "搭建内部 AI 自动化工作流",
-      description: "把客服 FAQ、线索分拣和周报整理做成自动化流程，并交付使用说明。",
+      title: "搭建客服 FAQ 与周报 AI 自动化",
+      description: "把客服 FAQ、线索分拣和周报整理做成可运行的自动化流程，并交付操作说明。",
       budget: 22000,
-      deadline: "2026-08-03",
-      skills: ["AI", "后端", "产品"],
+      deadline: "2026-08-08",
+      skills: ["AI自动化", "产品", "数据整理"],
       status: "published",
       createdAt,
-      ai: generateTaskBreakdown("搭建内部 AI 自动化工作流", "把客服 FAQ、线索分拣和周报整理做成自动化流程，并交付使用说明。", 22000, ["AI", "后端", "产品"])
-    },
-    {
-      id: "demo-task-finance",
-      companyName: "Harbor Studio",
-      companyContact: "finance@harborstudio.example",
-      title: "整理外包项目财务台账",
-      description: "规范应收应付、项目成本和月度利润表，形成可持续维护的财务模板。",
-      budget: 6000,
-      deadline: "2026-07-18",
-      skills: ["财务", "数据分析", "运营"],
-      status: "published",
-      createdAt,
-      ai: generateTaskBreakdown("整理外包项目财务台账", "规范应收应付、项目成本和月度利润表，形成可持续维护的财务模板。", 6000, ["财务", "数据分析", "运营"])
+      ai: generateTaskBreakdown("搭建客服 FAQ 与周报 AI 自动化", "客服 FAQ、线索分拣和周报整理自动化流程。", 22000, ["AI自动化", "产品", "数据整理"])
     }
   ];
 
   const talents: TalentProfile[] = [
-    { id: "demo-talent-product", name: "周启明", contact: "zhou@example.com", skills: ["产品", "AI", "前端"], availability: "每周 20 小时", expectedIncome: 12000, experience: "做过 AI SaaS MVP、需求拆解和前端交付。", createdAt },
-    { id: "demo-talent-design", name: "苏曼", contact: "suman@example.com", skills: ["设计", "文案", "产品"], availability: "每周 15 小时", expectedIncome: 10000, experience: "擅长品牌视觉、落地页和转化文案。", createdAt },
-    { id: "demo-talent-data", name: "王可", contact: "wangke@example.com", skills: ["数据分析", "后端", "AI"], availability: "每周 18 小时", expectedIncome: 13000, experience: "做过销售数据看板、BI 报告和数据清洗。", createdAt },
-    { id: "demo-talent-ops", name: "李安然", contact: "li@example.com", skills: ["运营", "文案", "AI"], availability: "每周 12 小时", expectedIncome: 7000, experience: "负责过教育产品内容矩阵、短视频脚本和增长复盘。", createdAt },
-    { id: "demo-talent-auto", name: "赵一帆", contact: "zhao@example.com", skills: ["AI", "后端", "产品"], availability: "每周 25 小时", expectedIncome: 16000, experience: "搭建过客服机器人、内部自动化流程和权限接口。", createdAt },
-    { id: "demo-talent-finance", name: "黄佳", contact: "huangjia@example.com", skills: ["财务", "数据分析", "运营"], availability: "每周 10 小时", expectedIncome: 5000, experience: "有外包项目财务、应收应付和利润表经验。", createdAt }
+    { id: "demo-talent-growth", name: "周启明", contact: "zhou@example.com", skills: ["海外获客", "市场调研", "AI"], availability: "每周 20 小时", expectedIncome: 12000, experience: "完成 4 个出海获客试工项目，平均企业评分 4.8，2 次长期合作转化。", createdAt },
+    { id: "demo-talent-content", name: "苏曼", contact: "suman@example.com", skills: ["内容运营", "文案", "AI"], availability: "每周 15 小时", expectedIncome: 8000, experience: "交付过 6 套内容增长项目，擅长选题、脚本和复盘指标，企业复购率 50%。", createdAt },
+    { id: "demo-talent-data", name: "王可", contact: "wangke@example.com", skills: ["数据整理", "数据分析", "AI自动化"], availability: "每周 18 小时", expectedIncome: 13000, experience: "做过销售数据看板、BI 报告和数据清洗，交付结果可直接给管理层使用。", createdAt },
+    { id: "demo-talent-auto", name: "赵一帆", contact: "zhao@example.com", skills: ["AI自动化", "产品", "数据整理"], availability: "每周 25 小时", expectedIncome: 16000, experience: "搭建过客服机器人、内部自动化流程和权限接口，完成后有操作文档和培训记录。", createdAt }
   ];
 
   const matches = tasks.flatMap((task) => createMatches(task, talents));
   const applications: TaskApplication[] = [
-    { id: "demo-task-content-demo-talent-ops-application", taskId: "demo-task-content", talentId: "demo-talent-ops", status: "order_created", createdAt },
-    { id: "demo-task-finance-demo-talent-finance-application", taskId: "demo-task-finance", talentId: "demo-talent-finance", status: "order_created", createdAt }
+    { id: "demo-trial-content-demo-talent-content-application", taskId: "demo-trial-content", talentId: "demo-talent-content", status: "order_created", createdAt }
   ];
   const orders: PlatformOrder[] = [
-    { id: "demo-task-content-demo-talent-ops-talent_application", taskId: "demo-task-content", talentId: "demo-talent-ops", source: "talent_application", amount: 8000, commissionRate: 10, commissionAmount: 800, talentPayout: 7200, status: "pending_payment", createdAt },
-    { id: "demo-task-automation-demo-talent-auto-enterprise_invite", taskId: "demo-task-automation", talentId: "demo-talent-auto", source: "enterprise_invite", amount: 22000, commissionRate: 10, commissionAmount: 2200, talentPayout: 19800, status: "escrowed", createdAt }
+    { id: "demo-trial-content-demo-talent-content-talent_application", taskId: "demo-trial-content", talentId: "demo-talent-content", source: "talent_application", amount: 9000, commissionRate: 10, commissionAmount: 900, talentPayout: 8100, status: "completed", createdAt }
   ];
 
   return { tasks, talents, matches, applications, orders };
@@ -135,7 +118,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("ai-workforce-data");
+    const saved = localStorage.getItem("ai-worktrial-data");
     if (saved) {
       const parsed = JSON.parse(saved);
       setData({ ...hydrateSeed(), ...parsed, applications: parsed.applications ?? [], orders: parsed.orders ?? [] });
@@ -143,7 +126,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) localStorage.setItem("ai-workforce-data", JSON.stringify(data));
+    if (!isSupabaseConfigured) localStorage.setItem("ai-worktrial-data", JSON.stringify(data));
   }, [data]);
 
   useEffect(() => {
@@ -172,7 +155,7 @@ export default function Home() {
   }, [session]);
 
   useEffect(() => {
-    if (!session || !isAdmin || data.tasks.some((task) => task.id === "demo-task-brand")) return;
+    if (!session || !isAdmin || data.tasks.some((task) => task.id === "demo-trial-growth")) return;
     void seedDemoData();
   }, [session, isAdmin]);
 
@@ -193,7 +176,7 @@ export default function Home() {
         await saveCloudTask(task);
         await Promise.all(data.talents.map((talent) => saveCloudTalent(talent)));
         await saveCloudMatches(matches);
-        setNotice("任务已发布到云端，并生成匹配结果。");
+        setNotice("经营问题已发布为任务试工项目，并生成 AI 拆解与人才匹配。");
       } catch (error) {
         setNotice(`云端保存失败：${error instanceof Error ? error.message : "未知错误"}`);
       }
@@ -211,7 +194,7 @@ export default function Home() {
         await Promise.all(data.tasks.map((task) => saveCloudTask(task)));
         await saveCloudTalent(talent);
         await saveCloudMatches(nextMatches);
-        setNotice("个人资料已保存到云端，并重新生成匹配。");
+        setNotice("信用档案已保存，并基于真实项目重新生成匹配。");
       } catch (error) {
         setNotice(`云端保存失败：${error instanceof Error ? error.message : "未知错误"}`);
       }
@@ -221,7 +204,7 @@ export default function Home() {
 
   async function setMatchStatus(matchId: string, status: MatchResult["status"]) {
     setData((current) => ({ ...current, matches: current.matches.map((match) => match.id === matchId ? { ...match, status } : match) }));
-    if (session) await updateCloudMatchStatus(matchId, status).catch((error) => setNotice(`云端状态更新失败：${error.message}`));
+    if (session) await updateCloudMatchStatus(matchId, status).catch((error) => setNotice(`状态更新失败：${error.message}`));
   }
 
   function buildOrder(taskId: string, talentId: string, source: PlatformOrder["source"]): PlatformOrder {
@@ -234,12 +217,12 @@ export default function Home() {
 
   async function createOrder(order: PlatformOrder) {
     setData((current) => ({ ...current, orders: [order, ...current.orders.filter((item) => item.id !== order.id)] }));
-    if (session) await saveCloudOrder(order).catch((error) => setNotice(`订单保存失败：${error.message}`));
+    if (session) await saveCloudOrder(order).catch((error) => setNotice(`项目记录保存失败：${error.message}`));
   }
 
   async function setOrderStatus(orderId: string, status: PlatformOrder["status"]) {
     setData((current) => ({ ...current, orders: current.orders.map((order) => order.id === orderId ? { ...order, status } : order) }));
-    if (session) await updateCloudOrderStatus(orderId, status).catch((error) => setNotice(`订单状态更新失败：${error.message}`));
+    if (session) await updateCloudOrderStatus(orderId, status).catch((error) => setNotice(`项目状态更新失败：${error.message}`));
   }
 
   async function applyToTask(application: TaskApplication) {
@@ -271,14 +254,7 @@ export default function Home() {
   async function seedDemoData() {
     if (!isAdmin) return setNotice("当前账号没有管理员权限。");
     const demo = buildDemoData();
-    const merged: AppData = {
-      tasks: [...demo.tasks, ...data.tasks.filter((item) => !demo.tasks.some((demoItem) => demoItem.id === item.id))],
-      talents: [...demo.talents, ...data.talents.filter((item) => !demo.talents.some((demoItem) => demoItem.id === item.id))],
-      matches: [...demo.matches, ...data.matches.filter((item) => !demo.matches.some((demoItem) => demoItem.id === item.id))],
-      applications: [...demo.applications, ...data.applications.filter((item) => !demo.applications.some((demoItem) => demoItem.id === item.id))],
-      orders: [...demo.orders, ...data.orders.filter((item) => !demo.orders.some((demoItem) => demoItem.id === item.id))]
-    };
-    setData(merged);
+    setData(demo);
     setSelectedTaskId(demo.tasks[0]?.id ?? selectedTaskId);
     if (session) {
       try {
@@ -287,12 +263,10 @@ export default function Home() {
         await saveCloudMatches(demo.matches);
         await Promise.all(demo.applications.map((application) => saveCloudApplication(application)));
         await Promise.all(demo.orders.map((order) => saveCloudOrder(order)));
-        setNotice("已生成演示企业任务、个人用户、匹配记录和平台订单。");
+        setNotice("已生成任务试工演示数据。");
       } catch (error) {
         setNotice(`演示数据保存失败：${error instanceof Error ? error.message : "未知错误"}`);
       }
-    } else {
-      setNotice("已在本地生成演示数据。登录后可同步到云端。");
     }
   }
 
@@ -312,8 +286,8 @@ export default function Home() {
 }
 
 function Header({ view, navigate, menuOpen, setMenuOpen, session }: { view: View; navigate: (view: View) => void; menuOpen: boolean; setMenuOpen: (open: boolean) => void; session: Session | null }) {
-  const links: [View, string][] = [["post", "企业发布"], ["profile", "个人资料"], ["market", "任务大厅"], ["matches", "AI 匹配"], ["admin", "管理后台"]];
-  return <header className="sticky top-0 z-40 border-b border-[#dde3ea] bg-white/90 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5"><button className="flex items-center gap-3" onClick={() => navigate("home")}><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#155eef] text-white"><Sparkles size={18} /></span><span className="text-left"><b className="block leading-4">AI Workforce</b><small className="text-[#667085]">AI 劳动力网络 MVP</small></span></button><nav className="hidden items-center gap-2 md:flex">{links.map(([target, label]) => <button key={target} onClick={() => navigate(target)} className={`nav ${view === target ? "navActive" : ""}`}>{label}</button>)}<button onClick={() => navigate("auth")} className={`nav ${view === "auth" ? "navActive" : ""}`}>{session ? "账号" : "注册/登录"}</button><a href="/aureonagent/en" className="nav">English</a></nav><button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></div>{menuOpen && <div className="grid border-t bg-white p-3 md:hidden">{links.map(([target, label]) => <button key={target} className="rounded-lg p-3 text-left" onClick={() => navigate(target)}>{label}</button>)}<button className="rounded-lg p-3 text-left" onClick={() => navigate("auth")}>{session ? "账号" : "注册/登录"}</button><a className="rounded-lg p-3 text-left" href="/aureonagent/en">English</a></div>}</header>;
+  const links: [View, string][] = [["post", "企业提交问题"], ["profile", "信用档案"], ["market", "试工大厅"], ["matches", "AI 验证匹配"], ["admin", "管理后台"]];
+  return <header className="sticky top-0 z-40 border-b border-[#dde3ea] bg-white/90 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5"><button className="flex items-center gap-3" onClick={() => navigate("home")}><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#155eef] text-white"><Sparkles size={18} /></span><span className="text-left"><b className="block leading-4">AI WorkTrial</b><small className="text-[#667085]">任务试工与人才验证</small></span></button><nav className="hidden items-center gap-2 md:flex">{links.map(([target, label]) => <button key={target} onClick={() => navigate(target)} className={`nav ${view === target ? "navActive" : ""}`}>{label}</button>)}<button onClick={() => navigate("auth")} className={`nav ${view === "auth" ? "navActive" : ""}`}>{session ? "账号" : "注册/登录"}</button><a href="/aureonagent/en" className="nav">English</a></nav><button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></div>{menuOpen && <div className="grid border-t bg-white p-3 md:hidden">{links.map(([target, label]) => <button key={target} className="rounded-lg p-3 text-left" onClick={() => navigate(target)}>{label}</button>)}<button className="rounded-lg p-3 text-left" onClick={() => navigate("auth")}>{session ? "账号" : "注册/登录"}</button><a className="rounded-lg p-3 text-left" href="/aureonagent/en">English</a></div>}</header>;
 }
 
 function AuthPage({ session, setNotice }: { session: Session | null; setNotice: (value: string) => void }) {
@@ -327,22 +301,36 @@ function AuthPage({ session, setNotice }: { session: Session | null; setNotice: 
 }
 
 function Landing({ navigate }: { navigate: (view: View) => void }) {
-  const steps = ["企业提出结果目标", "AI 理解并拆解任务", "匹配可交付人才节点", "协作推进阶段交付", "沉淀能力与信誉记录"];
-  return <><section className="border-b border-[#e4e7ec] bg-white"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-[1.05fr_.95fr]"><div><span className="eyebrow">AI WORKFORCE NETWORK</span><h1 className="mt-5 max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">企业按结果调用 AI 劳动力，个人用技能接入网络获得收入。</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-[#667085]">平台把企业目标转化为可执行工作单元，让 AI、个人技能和交付流程在同一个网络里协作。</p><div className="mt-8 flex flex-wrap gap-3"><button className="primary" onClick={() => navigate("post")}><BriefcaseBusiness size={18} />发布企业任务</button><button className="secondary" onClick={() => navigate("profile")}><UserRound size={18} />创建个人资料</button></div></div><div className="panel p-6"><span className="eyebrow">WORKFORCE OS</span><h2 className="mt-2 text-xl font-semibold">AI 劳动力网络如何运转</h2><div className="mt-5 grid gap-3">{steps.map((item, index) => <div className="flex items-center gap-3 rounded-lg bg-[#f2f4f7] p-4" key={item}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white text-sm font-semibold text-[#155eef]">{index + 1}</span><span className="font-medium">{item}</span></div>)}</div></div></div></section><section className="mx-auto grid max-w-7xl gap-5 px-5 py-14 md:grid-cols-3"><Feature icon={<Sparkles />} title="AI 拆解" body="自动生成里程碑、交付物和建议报价。" /><Feature icon={<UsersRound />} title="双向匹配" body="企业可邀请个人，个人也可申请企业任务。" /><Feature icon={<LayoutDashboard />} title="后台管理" body="管理员可删除任务、个人资料、申请和订单。" /></section></>;
+  const steps = ["企业提交真实经营问题", "AI 拆解任务、预算、周期与验收标准", "匹配有项目证据的人才", "先完成试工项目并验证结果", "转入长期合作或正式招聘"];
+  return <><section className="border-b border-[#e4e7ec] bg-white"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-[1.05fr_.95fr]"><div><span className="eyebrow">AI WORK TRIAL PLATFORM</span><h1 className="mt-5 max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">先完成项目，再决定是否招聘</h1><p className="mt-6 max-w-2xl text-lg leading-8 text-[#667085]">企业先购买结果，人才用真实项目证明能力。AI 把海外获客、内容运营、数据整理、AI 自动化、市场调研等经营问题拆成可验收的任务试工。</p><div className="mt-8 flex flex-wrap gap-3"><button className="primary" onClick={() => navigate("post")}><BriefcaseBusiness size={18} />提交经营问题</button><button className="secondary" onClick={() => navigate("profile")}><UserRound size={18} />建立信用档案</button></div></div><div className="panel p-6"><span className="eyebrow">VALIDATION FLOW</span><h2 className="mt-2 text-xl font-semibold">从结果验证到长期合作</h2><div className="mt-5 grid gap-3">{steps.map((item, index) => <div className="flex items-center gap-3 rounded-lg bg-[#f2f4f7] p-4" key={item}><span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-white text-sm font-semibold text-[#155eef]">{index + 1}</span><span className="font-medium">{item}</span></div>)}</div></div></div></section><section className="mx-auto grid max-w-7xl gap-5 px-5 py-14 md:grid-cols-3"><Feature icon={<Sparkles />} title="AI 辅助拆解" body="把经营问题拆成范围、预算、周期、里程碑和验收标准。" /><Feature icon={<FileCheck2 />} title="真实项目验证" body="不靠简历海投，先用真实交付证明能力和协作质量。" /><Feature icon={<UsersRound />} title="长期合作转化" body="企业先验证结果，再决定复购、长期合作或正式招聘。" /></section><ProofSection /></>;
+}
+
+function ProofSection() {
+  const items = [
+    ["项目结果", "30 条海外线索、触达脚本、渠道复盘"],
+    ["企业评价", "按期交付，结构清晰，可直接进入下一轮测试"],
+    ["复购情况", "已从一次试工转为 3 个月增长支持"],
+    ["能力信用", "海外获客 92 / 内容运营 86 / AI 辅助 88"]
+  ];
+  return <section className="mx-auto max-w-7xl px-5 pb-14"><div className="panel p-6"><span className="eyebrow">CREDIT PROFILE</span><h2 className="mt-2 text-2xl font-semibold">个人主页不再只是简历，而是可验证的项目信用</h2><div className="mt-6 grid gap-4 md:grid-cols-4">{items.map(([title, body]) => <div className="rounded-lg bg-[#f8fafc] p-4" key={title}><b>{title}</b><p className="mt-2 text-sm leading-6 text-[#667085]">{body}</p></div>)}</div></div></section>;
 }
 
 function TaskPost({ onSubmit }: { onSubmit: (task: EnterpriseTask) => void }) {
-  const [form, setForm] = useState({ companyName: "", companyContact: "", title: "", description: "", budget: 10000, deadline: "2026-07-20", skills: "产品, 设计, 前端" });
+  const [form, setForm] = useState({ companyName: "", companyContact: "", title: "", description: "", budget: 12000, deadline: "2026-08-01", skills: "海外获客, 市场调研, AI" });
   const skills = normalizeSkills(form.skills);
   const ai = useMemo(() => generateTaskBreakdown(form.title, form.description, form.budget, skills), [form.title, form.description, form.budget, form.skills]);
-  function submit() { onSubmit({ id: crypto.randomUUID(), companyName: form.companyName || "未命名企业", companyContact: form.companyContact, title: form.title || "未命名任务", description: form.description, budget: form.budget, deadline: form.deadline, skills, status: "published", createdAt: new Date().toISOString(), ai }); }
-  return <PageShell eyebrow="ENTERPRISE" title="企业端发布任务"><div className="grid gap-6 lg:grid-cols-[1fr_.9fr]"><div className="panel p-6"><div className="grid gap-4"><Field label="企业名称" value={form.companyName} onChange={(companyName) => setForm({ ...form, companyName })} /><Field label="企业联系方式（付款后开放）" value={form.companyContact} onChange={(companyContact) => setForm({ ...form, companyContact })} /><Field label="任务标题" value={form.title} onChange={(title) => setForm({ ...form, title })} /><TextArea label="任务描述" value={form.description} onChange={(description) => setForm({ ...form, description })} /><NumberField label="预算（元）" value={form.budget} onChange={(budget) => setForm({ ...form, budget })} /><Field label="截止时间" type="date" value={form.deadline} onChange={(deadline) => setForm({ ...form, deadline })} /><Field label="所需技能" value={form.skills} onChange={(skills) => setForm({ ...form, skills })} /><button className="primary justify-center" disabled={!form.title || !form.description || !form.companyContact} onClick={submit}><Sparkles size={18} />发布并生成匹配</button></div></div><AiBreakdown ai={ai} skills={skills} /></div></PageShell>;
+  function submit() { onSubmit({ id: crypto.randomUUID(), companyName: form.companyName || "未命名企业", companyContact: form.companyContact, title: form.title || "未命名试工项目", description: form.description, budget: form.budget, deadline: form.deadline, skills, status: "published", createdAt: new Date().toISOString(), ai }); }
+  return <PageShell eyebrow="ENTERPRISE" title="企业提交真实经营问题"><div className="mb-6 rounded-lg border border-[#d0d5dd] bg-white p-4 text-sm leading-6 text-[#475467]">不要先发布正式岗位。先提交一个真实问题，例如海外获客、内容运营、数据整理、AI 自动化或市场调研，由 AI 拆成可交付、可验收、可转长期合作的试工项目。</div><div className="grid gap-6 lg:grid-cols-[1fr_.9fr]"><div className="panel p-6"><div className="grid gap-4"><Field label="企业名称" value={form.companyName} onChange={(companyName) => setForm({ ...form, companyName })} /><Field label="企业联系人（项目确认后开放）" value={form.companyContact} onChange={(companyContact) => setForm({ ...form, companyContact })} /><Field label="经营问题 / 试工项目标题" value={form.title} onChange={(title) => setForm({ ...form, title })} placeholder="例如：验证海外获客渠道并产出首批线索" /><TextArea label="问题背景、已有资料和期望结果" value={form.description} onChange={(description) => setForm({ ...form, description })} placeholder="说明真实业务场景、希望看到的结果、可提供的资料和验收口径。" /><NumberField label="结果验证预算（元）" value={form.budget} onChange={(budget) => setForm({ ...form, budget })} /><Field label="期望完成时间" type="date" value={form.deadline} onChange={(deadline) => setForm({ ...form, deadline })} /><Field label="所需能力标签" value={form.skills} onChange={(skills) => setForm({ ...form, skills })} /><button className="primary justify-center" disabled={!form.title || !form.description || !form.companyContact} onClick={submit}><Sparkles size={18} />AI 拆解并匹配人才</button></div></div><AiBreakdown ai={ai} skills={skills} /></div></PageShell>;
 }
 
 function TalentProfileForm({ onSubmit }: { onSubmit: (talent: TalentProfile) => void }) {
-  const [form, setForm] = useState({ name: "", contact: "", skills: "产品, 前端, AI", availability: "每周 20 小时", expectedIncome: 8000, experience: "" });
+  const [form, setForm] = useState({ name: "", contact: "", skills: "海外获客, 内容运营, AI", availability: "每周 20 小时", expectedIncome: 9000, experience: "" });
   function submit() { onSubmit({ id: crypto.randomUUID(), name: form.name, contact: form.contact, skills: normalizeSkills(form.skills), availability: form.availability, expectedIncome: form.expectedIncome, experience: form.experience, createdAt: new Date().toISOString() }); }
-  return <PageShell eyebrow="TALENT" title="个人端资料页面"><div className="panel max-w-3xl p-6"><div className="grid gap-4 md:grid-cols-2"><Field label="姓名" value={form.name} onChange={(name) => setForm({ ...form, name })} /><Field label="联系方式（付款后开放）" value={form.contact} onChange={(contact) => setForm({ ...form, contact })} /><Field label="技能标签" value={form.skills} onChange={(skills) => setForm({ ...form, skills })} /><Field label="可工作时间" value={form.availability} onChange={(availability) => setForm({ ...form, availability })} /><NumberField label="期望收入（元/任务）" value={form.expectedIncome} onChange={(expectedIncome) => setForm({ ...form, expectedIncome })} /><div className="md:col-span-2"><TextArea label="过往经验" value={form.experience} onChange={(experience) => setForm({ ...form, experience })} /></div><button className="primary justify-center md:col-span-2" disabled={!form.name || !form.contact} onClick={submit}><CheckCircle2 size={18} />保存资料</button></div></div></PageShell>;
+  return <PageShell eyebrow="TALENT CREDIT" title="建立可验证的职业信用档案"><div className="grid gap-6 lg:grid-cols-[1fr_.8fr]"><div className="panel p-6"><div className="grid gap-4 md:grid-cols-2"><Field label="姓名" value={form.name} onChange={(name) => setForm({ ...form, name })} /><Field label="联系方式（项目确认后开放）" value={form.contact} onChange={(contact) => setForm({ ...form, contact })} /><Field label="能力标签" value={form.skills} onChange={(skills) => setForm({ ...form, skills })} /><Field label="可投入时间" value={form.availability} onChange={(availability) => setForm({ ...form, availability })} /><NumberField label="期望项目收入（元）" value={form.expectedIncome} onChange={(expectedIncome) => setForm({ ...form, expectedIncome })} /><div className="md:col-span-2"><TextArea label="已完成项目、交付结果、企业评价、复购或长期合作记录" value={form.experience} onChange={(experience) => setForm({ ...form, experience })} placeholder="不要只写简历。请写真实项目：做了什么、交付了什么、结果如何、企业是否复购。" /></div><button className="primary justify-center md:col-span-2" disabled={!form.name || !form.contact} onClick={submit}><CheckCircle2 size={18} />保存信用档案</button></div></div><CreditPreview /></div></PageShell>;
+}
+
+function CreditPreview() {
+  return <aside className="panel p-6"><span className="eyebrow">PROFILE FORMAT</span><h2 className="mt-2 text-xl font-semibold">企业看到的是能力证据</h2><div className="mt-5 grid gap-3 text-sm text-[#475467]">{["完成项目：海外获客线索验证", "交付结果：客户画像、脚本、线索表", "企业评价：按期交付，可继续合作", "复购情况：进入 3 个月增长支持", "能力标签：海外获客 / AI / 内容运营"].map((item) => <div className="rounded-lg bg-[#f8fafc] p-3" key={item}>{item}</div>)}</div></aside>;
 }
 
 function TaskMarket({ tasks, talents, applications, orders, selectedTaskId, setSelectedTaskId, navigate, onApply, createOrder, buildOrder, setNotice }: { tasks: EnterpriseTask[]; talents: TalentProfile[]; applications: TaskApplication[]; orders: PlatformOrder[]; selectedTaskId: string; setSelectedTaskId: (id: string) => void; navigate: (view: View) => void; onApply: (application: TaskApplication) => void; createOrder: (order: PlatformOrder) => void; buildOrder: (taskId: string, talentId: string, source: PlatformOrder["source"]) => PlatformOrder; setNotice: (value: string) => void }) {
@@ -354,23 +342,27 @@ function TaskMarket({ tasks, talents, applications, orders, selectedTaskId, setS
   const filtered = tasks.filter((task) => (!skill || task.skills.includes(skill)) && (!budget || task.budget >= Number(budget)) && (!deadline || task.deadline <= deadline));
   useEffect(() => { if (!talentId && talents[0]?.id) setTalentId(talents[0].id); }, [talentId, talents]);
   const selectedTalent = talents.find((talent) => talent.id === talentId);
-  return <PageShell eyebrow="MARKET" title="任务大厅">{talents.length === 0 ? <div className="panel mb-5 p-6"><h2 className="text-xl font-semibold">先创建个人资料</h2><button className="primary mt-5" onClick={() => navigate("profile")}><UserRound size={18} />去创建个人资料</button></div> : <div className="mb-5 grid gap-3 rounded-xl border border-[#d0d5dd] bg-white p-4 md:grid-cols-5"><label><span className="label">以哪个个人资料申请</span><select className="input" value={talentId} onChange={(event) => setTalentId(event.target.value)}>{talents.map((talent) => <option key={talent.id} value={talent.id}>{talent.name} · {talent.contact}</option>)}</select></label><Select label="按技能筛选" value={skill} onChange={setSkill} options={["", ...skills]} /><Field label="最低预算" type="number" value={budget} onChange={setBudget} /><Field label="截止时间早于" type="date" value={deadline} onChange={setDeadline} /><div className="flex items-end"><button className="secondary w-full justify-center" onClick={() => { setSkill(""); setBudget(""); setDeadline(""); }}><ListFilter size={18} />重置</button></div></div>}<div className="grid gap-4">{filtered.map((task) => { const hasApplied = Boolean(selectedTalent && applications.some((item) => item.taskId === task.id && item.talentId === selectedTalent.id)); const order = selectedTalent ? orders.find((item) => item.taskId === task.id && item.talentId === selectedTalent.id && item.source === "talent_application") : undefined; return <article className={`panel p-5 ${selectedTaskId === task.id ? "ring-2 ring-[#155eef]" : ""}`} key={task.id}><div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div><h2 className="text-xl font-semibold">{task.title}</h2><p className="mt-1 text-sm font-medium text-[#155eef]">{task.companyName}</p><p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">{task.description}</p><div className="mt-4 flex flex-wrap gap-2">{task.skills.map((item) => <Badge key={item}>{item}</Badge>)}</div></div><div className="min-w-52 rounded-lg bg-[#f2f4f7] p-4 text-sm"><b className="block text-lg">¥{task.budget.toLocaleString()}</b><span className="mt-1 flex items-center gap-1 text-[#667085]"><CalendarClock size={15} />{task.deadline}</span></div></div><div className="mt-5 flex flex-wrap gap-3"><button className="secondary" onClick={() => setSelectedTaskId(task.id)}><Search size={18} />选中任务</button><button className="primary" onClick={() => { setSelectedTaskId(task.id); navigate("matches"); }}>查看 AI 匹配<ArrowRight size={18} /></button><button className="secondary" disabled={!selectedTalent} onClick={async () => { if (!selectedTalent) return; await onApply({ id: `${task.id}-${selectedTalent.id}-application`, taskId: task.id, talentId: selectedTalent.id, status: "order_created", createdAt: new Date().toISOString() }); await createOrder(buildOrder(task.id, selectedTalent.id, "talent_application")); setNotice("已生成平台订单。企业托管付款后再开放联系方式。"); }}>{hasApplied ? "查看平台订单" : "申请合作 / 生成订单"}</button></div>{order && <OrderBox order={order} />}</article>; })}</div></PageShell>;
+  return <PageShell eyebrow="WORK TRIALS" title="人才任务试工大厅">{talents.length === 0 ? <div className="panel mb-5 p-6"><h2 className="text-xl font-semibold">先建立信用档案</h2><button className="primary mt-5" onClick={() => navigate("profile")}><UserRound size={18} />建立信用档案</button></div> : <div className="mb-5 grid gap-3 rounded-xl border border-[#d0d5dd] bg-white p-4 md:grid-cols-5"><label><span className="label">以哪个档案申请</span><select className="input" value={talentId} onChange={(event) => setTalentId(event.target.value)}>{talents.map((talent) => <option key={talent.id} value={talent.id}>{talent.name} · {talent.contact}</option>)}</select></label><Select label="按能力筛选" value={skill} onChange={setSkill} options={["", ...skills]} /><Field label="最低预算" type="number" value={budget} onChange={setBudget} /><Field label="截止时间早于" type="date" value={deadline} onChange={setDeadline} /><div className="flex items-end"><button className="secondary w-full justify-center" onClick={() => { setSkill(""); setBudget(""); setDeadline(""); }}><ListFilter size={18} />重置</button></div></div>}<div className="grid gap-4">{filtered.map((task) => { const hasApplied = Boolean(selectedTalent && applications.some((item) => item.taskId === task.id && item.talentId === selectedTalent.id)); const order = selectedTalent ? orders.find((item) => item.taskId === task.id && item.talentId === selectedTalent.id && item.source === "talent_application") : undefined; return <article className={`panel p-5 ${selectedTaskId === task.id ? "ring-2 ring-[#155eef]" : ""}`} key={task.id}><div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div><h2 className="text-xl font-semibold">{task.title}</h2><p className="mt-1 text-sm font-medium text-[#155eef]">{task.companyName}</p><p className="mt-2 max-w-3xl text-sm leading-6 text-[#667085]">{task.description}</p><div className="mt-4 flex flex-wrap gap-2">{task.skills.map((item) => <Badge key={item}>{item}</Badge>)}</div></div><div className="min-w-52 rounded-lg bg-[#f2f4f7] p-4 text-sm"><b className="block text-lg">¥{task.budget.toLocaleString()}</b><span className="mt-1 flex items-center gap-1 text-[#667085]"><CalendarClock size={15} />{task.deadline}</span><p className="mt-2 text-xs text-[#667085]">结果验证预算</p></div></div><div className="mt-5 flex flex-wrap gap-3"><button className="secondary" onClick={() => setSelectedTaskId(task.id)}><Search size={18} />选中项目</button><button className="primary" onClick={() => { setSelectedTaskId(task.id); navigate("matches"); }}>查看 AI 验证匹配<ArrowRight size={18} /></button><button className="secondary" disabled={!selectedTalent} onClick={async () => { if (!selectedTalent) return; await onApply({ id: `${task.id}-${selectedTalent.id}-application`, taskId: task.id, talentId: selectedTalent.id, status: "order_created", createdAt: new Date().toISOString() }); await createOrder(buildOrder(task.id, selectedTalent.id, "talent_application")); setNotice("已生成项目试工记录。企业确认后进入交付与评价。"); }}>{hasApplied ? "查看试工记录" : "申请试工 / 生成记录"}</button></div>{order && <OrderBox order={order} />}</article>; })}</div></PageShell>;
 }
 
 function MatchPage({ task, talents, matches, orders, onStatusChange, createOrder, buildOrder, setOrderStatus, setNotice }: { task: EnterpriseTask; talents: TalentProfile[]; matches: MatchResult[]; orders: PlatformOrder[]; onStatusChange: (matchId: string, status: MatchResult["status"]) => void; createOrder: (order: PlatformOrder) => void; buildOrder: (taskId: string, talentId: string, source: PlatformOrder["source"]) => PlatformOrder; setOrderStatus: (orderId: string, status: PlatformOrder["status"]) => void; setNotice: (value: string) => void }) {
-  return <PageShell eyebrow="AI MATCHING" title="AI 匹配结果页面"><div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]"><AiBreakdown ai={task.ai} skills={task.skills} task={task} /><div className="grid gap-4">{matches.map((match) => { const talent = talents.find((item) => item.id === match.talentId); if (!talent) return null; const order = orders.find((item) => item.taskId === task.id && item.talentId === talent.id && item.source === "enterprise_invite"); return <article className="panel p-5" key={match.id}><div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold">{talent.name}</h2><p className="mt-1 text-sm text-[#667085]">{talent.availability} · 期望 ¥{talent.expectedIncome.toLocaleString()}</p></div><span className="rounded-lg bg-[#ecfdf3] px-3 py-2 text-sm font-semibold text-[#027a48]">匹配 {match.score}</span></div><div className="mt-4 flex flex-wrap gap-2">{talent.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div><div className="mt-5 flex flex-wrap gap-3"><button className="primary" onClick={async () => { await onStatusChange(match.id, "selected"); await createOrder(buildOrder(task.id, talent.id, "enterprise_invite")); setNotice("已生成平台订单。请先托管付款。"); }}>选中并生成订单</button>{order && order.status === "pending_payment" && <button className="secondary" onClick={() => setOrderStatus(order.id, "escrowed")}>模拟托管付款</button>}{order && order.status === "escrowed" && <button className="secondary" onClick={() => setOrderStatus(order.id, "completed")}>模拟确认完成</button>}</div>{order && <OrderBox order={order} />}{order?.status === "completed" && <div className="mt-4 rounded-lg border border-[#abefc6] bg-[#ecfdf3] p-4 text-sm text-[#027a48]"><b className="block">订单已完成，联系方式已开放</b>{talent.contact}</div>}<h3 className="mt-5 font-semibold">匹配理由</h3><ul className="mt-2 grid gap-2 text-sm text-[#475467]">{match.reasons.map((reason) => <li className="rounded-lg bg-[#f2f4f7] p-3" key={reason}>{reason}</li>)}</ul></article>; })}</div></div></PageShell>;
+  return <PageShell eyebrow="AI VALIDATION MATCH" title="AI 匹配与项目验证方案"><div className="grid gap-6 lg:grid-cols-[.85fr_1.15fr]"><AiBreakdown ai={task.ai} skills={task.skills} task={task} /><div className="grid gap-4">{matches.map((match) => { const talent = talents.find((item) => item.id === match.talentId); if (!talent) return null; const order = orders.find((item) => item.taskId === task.id && item.talentId === talent.id && item.source === "enterprise_invite"); return <article className="panel p-5" key={match.id}><div className="flex items-start justify-between gap-4"><div><h2 className="text-xl font-semibold">{talent.name}</h2><p className="mt-1 text-sm text-[#667085]">{talent.availability} · 期望 ¥{talent.expectedIncome.toLocaleString()}</p></div><span className="rounded-lg bg-[#ecfdf3] px-3 py-2 text-sm font-semibold text-[#027a48]">验证匹配 {match.score}</span></div><div className="mt-4 flex flex-wrap gap-2">{talent.skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div><div className="mt-5 rounded-lg bg-[#f8fafc] p-4"><b className="text-sm">信用档案摘要</b><p className="mt-2 text-sm leading-6 text-[#667085]">{talent.experience || "尚未填写项目证据。"}</p></div><div className="mt-5 flex flex-wrap gap-3"><button className="primary" onClick={async () => { await onStatusChange(match.id, "selected"); await createOrder(buildOrder(task.id, talent.id, "enterprise_invite")); setNotice("已选中人才并生成项目试工记录。"); }}>选中进行试工验证</button>{order && order.status === "pending_payment" && <button className="secondary" onClick={() => setOrderStatus(order.id, "escrowed")}>模拟项目启动</button>}{order && order.status === "escrowed" && <button className="secondary" onClick={() => setOrderStatus(order.id, "completed")}>模拟结果验收</button>}</div>{order && <OrderBox order={order} />}{order?.status === "completed" && <LongTermBox talent={talent} />}<h3 className="mt-5 font-semibold">匹配理由</h3><ul className="mt-2 grid gap-2 text-sm text-[#475467]">{match.reasons.map((reason) => <li className="rounded-lg bg-[#f2f4f7] p-3" key={reason}>{reason}</li>)}</ul></article>; })}</div></div></PageShell>;
+}
+
+function LongTermBox({ talent }: { talent: TalentProfile }) {
+  return <div className="mt-4 rounded-lg border border-[#abefc6] bg-[#ecfdf3] p-4 text-sm text-[#027a48]"><b className="block">结果已验收，可进入长期合作 / 正式招聘评估</b><p className="mt-1">下一步：查看完整信用档案、确认复购范围、发起长期合作沟通。联系方式：{talent.contact}</p></div>;
 }
 
 function OrderBox({ order }: { order: PlatformOrder }) {
-  return <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]"><b className="block">平台订单</b><p>状态：{order.status}</p><p>任务金额：¥{order.amount.toLocaleString()} · 平台佣金 {order.commissionRate}%：¥{order.commissionAmount.toLocaleString()} · 执行者预计收入：¥{order.talentPayout.toLocaleString()}</p><p className="mt-2 text-[#475467]">付款前不开放联系方式，避免绕过平台成交。</p></div>;
+  return <div className="mt-4 rounded-lg border border-[#b2ddff] bg-[#eff8ff] p-4 text-sm text-[#1849a9]"><b className="block">项目试工记录</b><p>状态：{order.status}</p><p>项目预算：¥{order.amount.toLocaleString()} · 平台服务费 {order.commissionRate}% · 人才预计收入：¥{order.talentPayout.toLocaleString()}</p><p className="mt-2 text-[#475467]">项目结果、企业评价、复购情况会沉淀为人才信用档案。</p></div>;
 }
 
 function Admin({ data, isAdmin, onDelete }: { data: AppData; isAdmin: boolean; onDelete: (kind: AdminEntityKind, id: string) => void }) {
-  return <PageShell eyebrow="ADMIN" title="管理后台"><div className={`mb-5 rounded-lg border p-4 text-sm ${isAdmin ? "border-[#abefc6] bg-[#ecfdf3] text-[#027a48]" : "border-[#fedf89] bg-[#fffaeb] text-[#b54708]"}`}>{isAdmin ? "当前账号拥有管理员删除权限。" : "当前账号没有管理员删除权限。你仍可查看数据，但不能删除。"}</div><div className="grid gap-4 md:grid-cols-5"><Stat label="企业任务" value={data.tasks.length} /><Stat label="个人用户" value={data.talents.length} /><Stat label="匹配记录" value={data.matches.length} /><Stat label="个人申请" value={data.applications.length} /><Stat label="平台订单" value={data.orders.length} /></div><div className="mt-6 grid gap-6 lg:grid-cols-5"><AdminManageList title="企业任务" items={data.tasks.map((task) => ({ id: task.id, text: `${task.companyName} · ${task.title} · ¥${task.budget.toLocaleString()}`, kind: "task" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="个人用户" items={data.talents.map((talent) => ({ id: talent.id, text: `${talent.name} · ${talent.contact} · ${talent.skills.join("、")}`, kind: "talent" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="匹配记录" items={data.matches.map((match) => ({ id: match.id, text: `${match.taskId.slice(0, 8)} → ${match.talentId.slice(0, 10)} · ${match.score}`, kind: "match" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="个人申请" items={data.applications.map((application) => ({ id: application.id, text: `${application.taskId.slice(0, 8)} → ${application.talentId.slice(0, 10)} · ${application.status}`, kind: "application" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="平台订单" items={data.orders.map((order) => ({ id: order.id, text: `${order.source} · ¥${order.amount.toLocaleString()} · 佣金 ¥${order.commissionAmount.toLocaleString()} · ${order.status}`, kind: "order" as const }))} isAdmin={isAdmin} onDelete={onDelete} /></div></PageShell>;
+  return <PageShell eyebrow="ADMIN" title="管理后台"><div className={`mb-5 rounded-lg border p-4 text-sm ${isAdmin ? "border-[#abefc6] bg-[#ecfdf3] text-[#027a48]" : "border-[#fedf89] bg-[#fffaeb] text-[#b54708]"}`}>{isAdmin ? "当前账号拥有管理员删除权限。" : "当前账号没有管理员删除权限。你仍可查看数据，但不能删除。"}</div><div className="grid gap-4 md:grid-cols-5"><Stat label="试工项目" value={data.tasks.length} /><Stat label="信用档案" value={data.talents.length} /><Stat label="匹配记录" value={data.matches.length} /><Stat label="申请记录" value={data.applications.length} /><Stat label="项目记录" value={data.orders.length} /></div><div className="mt-6 grid gap-6 lg:grid-cols-5"><AdminManageList title="试工项目" items={data.tasks.map((task) => ({ id: task.id, text: `${task.companyName} · ${task.title} · ¥${task.budget.toLocaleString()}`, kind: "task" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="信用档案" items={data.talents.map((talent) => ({ id: talent.id, text: `${talent.name} · ${talent.contact} · ${talent.skills.join("、")}`, kind: "talent" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="匹配记录" items={data.matches.map((match) => ({ id: match.id, text: `${match.taskId.slice(0, 8)} -> ${match.talentId.slice(0, 10)} · ${match.score}`, kind: "match" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="申请记录" items={data.applications.map((application) => ({ id: application.id, text: `${application.taskId.slice(0, 8)} -> ${application.talentId.slice(0, 10)} · ${application.status}`, kind: "application" as const }))} isAdmin={isAdmin} onDelete={onDelete} /><AdminManageList title="项目记录" items={data.orders.map((order) => ({ id: order.id, text: `${order.source} · ¥${order.amount.toLocaleString()} · ${order.status}`, kind: "order" as const }))} isAdmin={isAdmin} onDelete={onDelete} /></div></PageShell>;
 }
 
 function AiBreakdown({ ai, skills, task }: { ai: EnterpriseTask["ai"]; skills: string[]; task?: EnterpriseTask }) {
-  return <aside className="panel p-6"><div className="flex items-center gap-2 text-[#155eef]"><Sparkles size={18} /><b>AI 自动拆解任务</b></div>{task && <h2 className="mt-3 text-xl font-semibold">{task.title}</h2>}<p className="mt-3 text-sm leading-6 text-[#667085]">{ai.summary}</p><div className="mt-4 flex flex-wrap gap-2">{skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div><Block title="里程碑" items={ai.milestones} /><Block title="交付物" items={ai.deliverables} /><Block title="风险提示" items={ai.risks} /><div className="mt-5 rounded-xl bg-[#eff4ff] p-4"><span className="text-sm text-[#475467]">AI 生成建议报价</span><b className="mt-1 block text-2xl text-[#155eef]">¥{ai.suggestedQuote.min.toLocaleString()} - ¥{ai.suggestedQuote.max.toLocaleString()}</b><p className="mt-2 text-xs text-[#667085]">{ai.suggestedQuote.basis}</p></div></aside>;
+  return <aside className="panel p-6"><div className="flex items-center gap-2 text-[#155eef]"><Sparkles size={18} /><b>AI 自动拆解试工项目</b></div>{task && <h2 className="mt-3 text-xl font-semibold">{task.title}</h2>}<p className="mt-3 text-sm leading-6 text-[#667085]">{ai.summary}</p><div className="mt-4 flex flex-wrap gap-2">{skills.map((skill) => <Badge key={skill}>{skill}</Badge>)}</div><Block title="阶段里程碑" items={ai.milestones} /><Block title="验收交付物" items={ai.deliverables} /><Block title="风险提示" items={ai.risks} /><div className="mt-5 rounded-xl bg-[#eff4ff] p-4"><span className="text-sm text-[#475467]">AI 建议验证预算</span><b className="mt-1 block text-2xl text-[#155eef]">¥{ai.suggestedQuote.min.toLocaleString()} - ¥{ai.suggestedQuote.max.toLocaleString()}</b><p className="mt-2 text-xs text-[#667085]">{ai.suggestedQuote.basis}</p></div></aside>;
 }
 
 function PageShell({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {

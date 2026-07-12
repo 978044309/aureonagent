@@ -5,12 +5,12 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Workforce - AI 劳动力网络 MVP",
-  description: "企业按结果调用 AI 劳动力，系统自动拆解、报价、匹配人才并推荐交付步骤的 Web MVP。",
-  keywords: ["AI Workforce", "AI 劳动力网络", "任务大厅", "人才匹配", "企业服务", "MVP"],
+  title: "AI WorkTrial - AI 任务试工与人才验证平台",
+  description: "企业先购买结果，人才用真实项目证明能力。AI 自动拆解经营问题、匹配人才、沉淀可验证职业信用。",
+  keywords: ["AI WorkTrial", "AI 任务试工", "人才验证", "职业信用", "真实项目", "长期合作"],
   openGraph: {
-    title: "AI Workforce",
-    description: "企业按结果调用 AI 劳动力，个人用技能接入网络获得收入。",
+    title: "AI WorkTrial",
+    description: "先完成项目，再决定是否招聘。",
     type: "website",
     locale: "zh_CN"
   }
